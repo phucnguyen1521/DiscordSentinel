@@ -1,0 +1,26 @@
+{
+  "channels": {
+    "welcomeChannelId": "1422896794215387277",
+    "goodbyeChannelId": "1427103506132893776",
+    "checkinChannelId": "1427127028380991538"
+  },
+  "watcherRoleName": "The Watcher",
+  "adminRoleNames": ["Admin", "Moderator"],
+  "antiSpam": {
+    "maxMessages": 5,
+    "timeWindowMs": 10000,
+    "warningMessage": "⚠️ Vui lòng gửi tin nhắn chậm lại! Bạn đang gửi quá nhanh."
+  },
+  "checkin": {
+    "topUsersCount": 3,
+    "roleDurationDays": 30
+  },
+  "colors": {
+    "welcome": "#00ff00",
+    "goodbye": "#ff0000",
+    "checkin": "#0099ff",
+    "warning": "#ffaa00",
+    "error": "#ff0000",
+    "success": "#00ff00"
+  }
+}
