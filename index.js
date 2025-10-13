@@ -24,10 +24,115 @@ const client = new Client({
 const botStartTime = Date.now();
 const userMessageTimestamps = new Map();
 
-// -------------------- Thay 'ready' bằng 'clientReady' --------------------
+// -------------------- Các hàm xử lý --------------------
+
+// Hàm scheduleTasks
+function scheduleTasks() {
+  cron.schedule('0 0 1 * *', async () => {
+    console.log('📅 Running monthly leaderboard task...');
+    await assignWatcherRoles();
+  });
+
+  cron.schedule('0 0 * * *', async () => {
+    console.log('🔍 Checking role assignments...');
+    await removeExpiredRoles();
+  });
+
+  console.log('⏰ Scheduled tasks initialized');
+}
+
+// Hàm assignWatcherRoles
+async function assignWatcherRoles() {
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const monthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+
+  const checkins = await getCheckins();
+  const monthData = checkins[monthKey];
+
+  if (!monthData) {
+    console.log('📊 No check-in data for last month');
+    return;
+  }
+
+  const leaderboard = Object.entries(monthData)
+    .map(([userId, data]) => ({ userId, total: data.total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, config.checkin.topUsersCount);
+
+  if (leaderboard.length === 0) {
+    console.log('📊 No users to assign roles');
+    return;
+  }
+
+  const assignments = await getRoleAssignments();
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + config.checkin.roleDurationDays);
+
+  for (const guild of client.guilds.cache.values()) {
+    const role = guild.roles.cache.find(r => r.name === config.watcherRoleName);
+    if (!role) continue;
+
+    for (const { userId, total } of leaderboard) {
+      try {
+        const member = await guild.members.fetch(userId);
+        await member.roles.add(role);
+
+        assignments.push({
+          userId,
+          guildId: guild.id,
+          roleId: role.id,
+          assignedAt: Date.now(),
+          expiresAt: expiryDate.getTime(),
+          checkins: total
+        });
+
+        console.log(`✅ Assigned "${config.watcherRoleName}" to ${member.user.tag} (${total} check-ins)`);
+      } catch (error) {
+        console.error(`❌ Error assigning role to user ${userId}:`, error);
+      }
+    }
+  }
+
+  await saveRoleAssignments(assignments);
+}
+
+// Hàm removeExpiredRoles
+async function removeExpiredRoles() {
+  const assignments = await getRoleAssignments();
+  const now = Date.now();
+  const remaining = [];
+
+  for (const assignment of assignments) {
+    if (assignment.expiresAt > now) {
+      remaining.push(assignment);
+      continue;
+    }
+
+    try {
+      const guild = client.guilds.cache.get(assignment.guildId);
+      if (!guild) continue;
+
+      const member = await guild.members.fetch(assignment.userId);
+      const role = guild.roles.cache.get(assignment.roleId);
+
+      if (member && role) {
+        await member.roles.remove(role);
+        console.log(`🔄 Removed expired "${role.name}" role from ${member.user.tag}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error removing role from user ${assignment.userId}:`, error);
+    }
+  }
+
+  await saveRoleAssignments(remaining);
+}
+
+// -------------------- Event clientReady --------------------
 client.once('clientReady', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
-  
+
+  // Register slash commands
   const commands = [
     { name: 'checkin', description: 'Điểm danh hàng ngày để theo dõi sự tham gia' },
     { name: 'status', description: 'Hiển thị trạng thái bot và thống kê' },
@@ -49,10 +154,11 @@ client.once('clientReady', async () => {
     console.error('❌ Error registering commands:', error);
   }
 
+  // Start scheduled tasks
   scheduleTasks();
 });
 
-// -------------------- Các event khác giữ nguyên --------------------
+// -------------------- Các event Discord --------------------
 client.on('guildMemberAdd', async (member) => {
   const welcomeChannel = member.guild.channels.cache.get(config.channels.welcomeChannelId);
   if (!welcomeChannel) return;
@@ -69,8 +175,7 @@ client.on('guildMemberAdd', async (member) => {
     .setFooter({ text: `Thành viên #${member.guild.memberCount}` })
     .setTimestamp();
 
-  try { await welcomeChannel.send({ embeds: [embed] }); } 
-  catch (error) { console.error(error); }
+  try { await welcomeChannel.send({ embeds: [embed] }); } catch (error) { console.error(error); }
 });
 
 client.on('guildMemberRemove', async (member) => {
@@ -85,8 +190,7 @@ client.on('guildMemberRemove', async (member) => {
     .addFields({ name: '📅 Rời đi', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true })
     .setTimestamp();
 
-  try { await goodbyeChannel.send({ embeds: [embed] }); } 
-  catch (error) { console.error(error); }
+  try { await goodbyeChannel.send({ embeds: [embed] }); } catch (error) { console.error(error); }
 });
 
 client.on('messageCreate', async (message) => {
@@ -122,9 +226,9 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// -------------------- interactionCreate và các hàm xử lý giữ nguyên --------------------
-// handleCheckin, handleStatus, handleResetCheckin, scheduleTasks, assignWatcherRoles, removeExpiredRoles
-// Bạn chỉ cần giữ nguyên các hàm này từ file cũ
+// -------------------- interactionCreate --------------------
+// Giữ nguyên các hàm handleCheckin, handleStatus, handleResetCheckin
+// Copy y nguyên từ file cũ
 
 // -------------------- Dummy server để Render free tier --------------------
 const http = require("http");
