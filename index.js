@@ -416,5 +416,15 @@ if (!process.env.DISCORD_BOT_TOKEN) {
   console.log('Please set your Discord bot token in the Secrets panel.');
   process.exit(1);
 }
+// --- thêm dummy server để Render free tier không báo lỗi ---
+const http = require("http");
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+  res.end("Bot is running");
+}).listen(PORT, () => {
+  console.log(`Dummy server listening on port ${PORT}`);
+});
+// --- hết phần thêm dummy server ---
 
 client.login(process.env.DISCORD_BOT_TOKEN);
