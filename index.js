@@ -138,9 +138,7 @@ client.on('messageCreate', async (message) => {
 });
 
 // -------------------- Chào người khi họ online --------------------
-// -------------------- Chào người khi họ online (v2 có shuffler, tránh lặp) --------------------
-
-// Tạo hàm shuffler để tránh trùng lặp lời chào
+// 🌀 Tạo hàm shuffler để tránh trùng lặp lời chào
 function createShuffler(arr) {
   const original = Array.isArray(arr) ? [...arr] : [];
   let pool = [...original];
@@ -152,7 +150,7 @@ function createShuffler(arr) {
   };
 }
 
-// Danh sách lời chào phân theo thời gian trong ngày
+// 💬 Danh sách lời chào phân theo thời gian trong ngày
 const greetings = { 
   sáng: [ 
     "Chào buổi sáng tốt lành ☀️", 
@@ -203,18 +201,19 @@ const greetings = {
   ] 
 };
 
-// Tạo shuffler riêng cho từng buổi
+// 🧩 Tạo shuffler riêng cho từng buổi
 const shufflers = {
-  sáng: createShuffler(greetingsByPeriod.sáng),
-  trưa: createShuffler(greetingsByPeriod.trưa),
-  chiều: createShuffler(greetingsByPeriod.chiều),
-  tối: createShuffler(greetingsByPeriod.tối),
-  khuya: createShuffler(greetingsByPeriod.khuya)
+  sáng: createShuffler(greetings.sáng),
+  trưa: createShuffler(greetings.trưa),
+  chiều: createShuffler(greetings.chiều),
+  tối: createShuffler(greetings.tối),
+  khuya: createShuffler(greetings.khuya)
 };
 
-// Cache tránh chào trùng người trong 10 phút
+// 🕗 Cache tránh chào trùng người trong 10 phút
 const recentlyGreeted = new Set();
 
+// 🎯 Sự kiện chào khi online
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
   try {
     if (!newPresence || !newPresence.user || newPresence.user.bot) return;
@@ -224,7 +223,6 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     const oldStatus = oldPresence?.status;
     const newStatus = newPresence.status;
 
-    // Chỉ chào khi người dùng vừa chuyển sang online
     const wentOnline =
       (oldStatus === 'offline' || oldStatus === 'invisible' || oldStatus === undefined) &&
       newStatus === 'online';
@@ -232,12 +230,10 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
       (oldStatus === 'idle' || oldStatus === 'dnd') && newStatus === 'online';
     if (!wentOnline && !resumedFromIdleOrDnd) return;
 
-    // Kiểm tra nếu người này vừa được chào gần đây
     if (recentlyGreeted.has(userId)) return;
     recentlyGreeted.add(userId);
-    setTimeout(() => recentlyGreeted.delete(userId), 10 * 60 * 1000); // reset sau 10 phút
+    setTimeout(() => recentlyGreeted.delete(userId), 10 * 60 * 1000);
 
-    // Giờ VN (UTC+7)
     const now = new Date();
     const hour = (now.getUTCHours() + 7) % 24;
     let period = 'khuya';
@@ -246,17 +242,12 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     else if (hour >= 13 && hour < 18) period = 'chiều';
     else if (hour >= 18 && hour < 22) period = 'tối';
 
-    // Lấy câu chào ngẫu nhiên (shuffler đảm bảo không lặp)
     const getGreeting = shufflers[period];
     const chosen = getGreeting();
 
-    // Lấy channel chào
     const greetingChannelId = config.channels.greetingChannelId;
     const channel = member.guild.channels.cache.get(greetingChannelId);
-    if (!channel) {
-      console.warn(`⚠️ Greeting channel ID ${greetingChannelId} not found.`);
-      return;
-    }
+    if (!channel) return console.warn(`⚠️ Greeting channel ID ${greetingChannelId} not found.`);
 
     await channel.send(`👋 <@${userId}> ${chosen}`);
     console.log(`✅ Gửi lời chào ${member.user.tag} (${period}): ${chosen}`);
@@ -264,6 +255,7 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     console.error('❌ Lỗi khi gửi lời chào:', err);
   }
 });
+
 
 // -------------------- Slash commands --------------------
 client.on('interactionCreate', async (interaction) => {
