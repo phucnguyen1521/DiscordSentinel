@@ -138,6 +138,7 @@ client.on('messageCreate', async (message) => {
 });
 
 // -------------------- Chào người khi họ online --------------------
+
 // 🌀 Tạo hàm shuffler để tránh trùng lặp lời chào
 function createShuffler(arr) {
   const original = Array.isArray(arr) ? [...arr] : [];
@@ -151,54 +152,54 @@ function createShuffler(arr) {
 }
 
 // 💬 Danh sách lời chào phân theo thời gian trong ngày
-const greetings = { 
-  sáng: [ 
-    "Chào buổi sáng tốt lành ☀️", 
-    "Ê con ngu kia, on sớm zậy định phá server hả 😤", 
-    "Một vị cao nhân từng nói: dậy xớm có làm thì mới có ăn không làm mà đòi có ăn thì ăn đầu BUỒI ăn CỨT thế cho nó dễ 😤", 
-    "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏", 
-    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho tao để làm gì? Em không có ước mơ hả? 😩", 
-    "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂", 
-    "Bình minh rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂", 
-    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩" 
-    ], 
-  trưa: [ 
-    "Chào buổi trưa nè 🌤️", 
-    "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤", 
-    "Ủa, trưa mà on chi? Mày không có đời sống hả 😂", 
-    "Trưa on là biết rảnh quá rồi đó nha 😎", 
-    "On trưa mà than buồn ngủ là tao chửi đó nghe 😏", 
-    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩" 
-  ], 
-  chiều: [ 
-    "Chiều on chi nữa, nghỉ xíu đi 😒", 
-    "Ủa, chiều rồi mà vẫn chưa biến hả, bám server dữ 👀", 
-    "On chiều mà làm như bận lắm vậy 😏", 
-    "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆", 
-    "Trời ơi chiều nào cũng thấy on, bỏ điện thoại xuống giao tiếp với người nhà đi em 😩", 
-    "Chiều rồi đó, đi ra ngoài hít khí trời chạm cỏ đi đồ nghiện 😜", 
-    "Hoàng hôn rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂", 
-    "Ủa chiều mà chưa ăn gì à, nhìn đói thấy thương luôn 😂" 
-  ], 
-  tối: [ 
-    "Ê con khùng, tối rồi on chi nữa 😴", 
-    "Tối rồi mà còn ngồi on, mai khỏi dậy nha 😏", 
-    "Ủa, tối rồi mà vẫn chưa biến hả, bám dai dữ 👀", 
-    "Tối nào cũng thấy mày on, server này của mày hả 😤", 
-    "Trời ơi, tối rồi mà vẫn ráng muốn ăn chửi à 😈", 
-    "On tối chi, không ra ngoài kiếm bồ đi 😎", 
-    "Còn chưa tắm mà on, bốc mùi online kìa 🤢", 
-    "Trời đêm đầy sao rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂", 
+const greetings = {
+  sáng: [
+    "Chào buổi sáng tốt lành ☀️",
+    "Ê con ngu kia, on sớm zậy định phá server hả 😤",
+    "Một vị cao nhân từng nói: dậy xớm có làm thì mới có ăn không làm mà đòi có ăn thì ăn đầu BUỒI ăn CỨT thế cho nó dễ 😤",
+    "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
+    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho tao để làm gì? Em không có ước mơ hả? 😩",
+    "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂",
+    "Bình minh rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
+    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+  ],
+  trưa: [
+    "Chào buổi trưa nè 🌤️",
+    "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤",
+    "Ủa, trưa mà on chi? Mày không có đời sống hả 😂",
+    "Trưa on là biết rảnh quá rồi đó nha 😎",
+    "On trưa mà than buồn ngủ là tao chửi đó nghe 😏",
+    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+  ],
+  chiều: [
+    "Chiều on chi nữa, nghỉ xíu đi 😒",
+    "Ủa, chiều rồi mà vẫn chưa biến hả, bám server dữ 👀",
+    "On chiều mà làm như bận lắm vậy 😏",
+    "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆",
+    "Trời ơi chiều nào cũng thấy on, bỏ điện thoại xuống giao tiếp với người nhà đi em 😩",
+    "Chiều rồi đó, đi ra ngoài hít khí trời chạm cỏ đi đồ nghiện 😜",
+    "Hoàng hôn rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
+    "Ủa chiều mà chưa ăn gì à, nhìn đói thấy thương luôn 😂"
+  ],
+  tối: [
+    "Ê con khùng, tối rồi on chi nữa 😴",
+    "Tối rồi mà còn ngồi on, mai khỏi dậy nha 😏",
+    "Ủa, tối rồi mà vẫn chưa biến hả, bám dai dữ 👀",
+    "Tối nào cũng thấy mày on, server này của mày hả 😤",
+    "Trời ơi, tối rồi mà vẫn ráng muốn ăn chửi à 😈",
+    "On tối chi, không ra ngoài kiếm bồ đi 😎",
+    "Còn chưa tắm mà on, bốc mùi online kìa 🤢",
+    "Trời đêm đầy sao rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
     "Ê đồ điên, tối rồi mà on, rảnh quá hả 😂"
-  ], 
-  khuya: [ 
-    "Khuya rồi đồ ngu, ngủ đi chứ on chi 😪", 
-    "Ủa, khuya rồi mà vẫn chưa biến hả, bám dai dữ 👀", 
-    "Mất ngủ hả con? Khuya zầy còn on 😵", 
-    "Khuya rồi mà on, chắc đang rình drama 🤨", 
-    "Ủa, định làm cú đêm luôn hả, server không phát cháo khuya đâu 😤", 
+  ],
+  khuya: [
+    "Khuya rồi đồ ngu, ngủ đi chứ on chi 😪",
+    "Ủa, khuya rồi mà vẫn chưa biến hả, bám dai dữ 👀",
+    "Mất ngủ hả con? Khuya zầy còn on 😵",
+    "Khuya rồi mà on, chắc đang rình drama 🤨",
+    "Ủa, định làm cú đêm luôn hả, server không phát cháo khuya đâu 😤",
     "Khuya rồi ngủ với mẹ đi em không mẹ buồn đó 🤦‍♂️"
-  ] 
+  ]
 };
 
 // 🧩 Tạo shuffler riêng cho từng buổi
@@ -210,8 +211,20 @@ const shufflers = {
   khuya: createShuffler(greetings.khuya)
 };
 
-// 🕗 Cache tránh chào trùng người trong 10 phút
-const recentlyGreeted = new Set();
+// 🕗 Danh sách người đã được chào trong mỗi buổi
+let greetedUsers = new Set();
+let currentPeriod = null;
+
+// 🔁 Xác định buổi hiện tại (theo giờ VN)
+function getPeriod() {
+  const now = new Date();
+  const hour = (now.getUTCHours() + 7) % 24; // UTC+7 (giờ VN)
+  if (hour >= 5 && hour < 11) return 'sáng';
+  if (hour >= 11 && hour < 13) return 'trưa';
+  if (hour >= 13 && hour < 18) return 'chiều';
+  if (hour >= 18 && hour < 22) return 'tối';
+  return 'khuya';
+}
 
 // 🎯 Sự kiện chào khi online
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
@@ -223,6 +236,7 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     const oldStatus = oldPresence?.status;
     const newStatus = newPresence.status;
 
+    // Khi người dùng vừa chuyển từ offline → online
     const wentOnline =
       (oldStatus === 'offline' || oldStatus === 'invisible' || oldStatus === undefined) &&
       newStatus === 'online';
@@ -230,24 +244,29 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
       (oldStatus === 'idle' || oldStatus === 'dnd') && newStatus === 'online';
     if (!wentOnline && !resumedFromIdleOrDnd) return;
 
-    if (recentlyGreeted.has(userId)) return;
-    recentlyGreeted.add(userId);
-    setTimeout(() => recentlyGreeted.delete(userId), 10 * 60 * 1000);
+    // 🕐 Xác định buổi hiện tại
+    const period = getPeriod();
 
-    const now = new Date();
-    const hour = (now.getUTCHours() + 7) % 24;
-    let period = 'khuya';
-    if (hour >= 5 && hour < 11) period = 'sáng';
-    else if (hour >= 11 && hour < 13) period = 'trưa';
-    else if (hour >= 13 && hour < 18) period = 'chiều';
-    else if (hour >= 18 && hour < 22) period = 'tối';
+    // 🧹 Nếu sang buổi mới → reset danh sách người đã được chào
+    if (period !== currentPeriod) {
+      currentPeriod = period;
+      greetedUsers.clear();
+      console.log(`🕒 Đã chuyển sang buổi "${period}" — reset danh sách chào.`);
+    }
 
+    // 🚫 Nếu người này đã được chào trong buổi này → bỏ qua
+    if (greetedUsers.has(userId)) return;
+    greetedUsers.add(userId);
+
+    // 🎲 Lấy lời chào ngẫu nhiên
     const getGreeting = shufflers[period];
     const chosen = getGreeting();
 
+    // 🔊 Gửi lời chào vào kênh cấu hình
     const greetingChannelId = config.channels.greetingChannelId;
     const channel = member.guild.channels.cache.get(greetingChannelId);
-    if (!channel) return console.warn(`⚠️ Greeting channel ID ${greetingChannelId} not found.`);
+    if (!channel)
+      return console.warn(`⚠️ Greeting channel ID ${greetingChannelId} not found.`);
 
     await channel.send(`👋 <@${userId}> ${chosen}`);
     console.log(`✅ Gửi lời chào ${member.user.tag} (${period}): ${chosen}`);
@@ -255,7 +274,6 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     console.error('❌ Lỗi khi gửi lời chào:', err);
   }
 });
-
 
 // -------------------- Slash commands --------------------
 client.on('interactionCreate', async (interaction) => {
