@@ -161,25 +161,22 @@ const greetings = {
   sáng: [
     "Chào buổi sáng tốt lành ☀️",
     "Dậy sớm dữ ha 😏",
-    "Sáng rồi đó, chúc ngày mới vui vẻ nha 🌞",
     "Ê con ngu kia, on sớm zậy định phá server hả 😤",
     "Sáng sớm mà on rồi, mày có ngủ bao giờ không 😒",
     "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
-    "Mới sáng mà thấy mặt là biết hôm nay không yên rồi 😩",
+    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho game để làm gì? Em không có ước mơ hả? 😩",
     "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂",
-    "Onl xớm dữ vậy má ☀️",
-    "Onl giờ này chắc chưa đánh răng luôn quá 🤢"
+    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+    
   ],
   trưa: [
     "Chào buổi trưa nè 🌤️",
     "Trưa rồi, nghỉ ngơi xíu đi 😌",
-    "Vừa on trưa là biết đói rồi 😋",
-    "On giờ này là khỏi ngủ trưa luôn rồi, giỏi ghê 😴",
     "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤",
     "Ủa, trưa mà on chi? Mày không có đời sống hả 😂",
     "Trưa on là biết rảnh quá rồi đó nha 😎",
     "On trưa mà than buồn ngủ là tao chửi đó nghe 😏",
-    "Trưa rồi mà mặt vẫn ngáo ngơ, thiếu vitamin hả 😩"
+    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
   ],
   chiều: [
     "Chiều on chi nữa, nghỉ xíu đi 😒",
@@ -196,7 +193,7 @@ const greetings = {
     "Tối rồi mà còn ngồi on, mai khỏi dậy nha 😏",
     "Ủa, tối rồi mà vẫn chưa biến hả, bám dai dữ 👀",
     "Tối nào cũng thấy mày on, server này của mày hả 😤",
-    "Trời ơi, tối rồi mà vẫn ráng cà khịa à 😈",
+    "Trời ơi, tối rồi mà vẫn ráng muốn ăn chửi à 😈",
     "On tối chi, không ra ngoài kiếm bồ đi 😎",
     "Còn chưa tắm mà on, bốc mùi online kìa 🤢",
     "Ê đồ điên, tối rồi mà on, rảnh quá hả 😂"
