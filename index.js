@@ -160,18 +160,17 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 const greetings = {
   sáng: [
     "Chào buổi sáng tốt lành ☀️",
-    "Dậy sớm dữ ha 😏",
     "Ê con ngu kia, on sớm zậy định phá server hả 😤",
+    "Một vị cao nhân từng nói: dậy xớm có làm thì mới có ăn không làm mà đòi có ăn thì ăn đầu BUỒI ăn CỨT thế cho nó dễ 😤",
     "Sáng sớm mà on rồi, mày có ngủ bao giờ không 😒",
     "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
-    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho game để làm gì? Em không có ước mơ hả? 😩",
+    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho tao để làm gì? Em không có ước mơ hả? 😩",
     "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂",
     "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
     
   ],
   trưa: [
     "Chào buổi trưa nè 🌤️",
-    "Trưa rồi, nghỉ ngơi xíu đi 😌",
     "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤",
     "Ủa, trưa mà on chi? Mày không có đời sống hả 😂",
     "Trưa on là biết rảnh quá rồi đó nha 😎",
