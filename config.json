@@ -2,7 +2,8 @@
   "channels": {
     "welcomeChannelId": "1422896794215387277",
     "goodbyeChannelId": "1427103506132893776",
-    "checkinChannelId": "1427127028380991538"
+    "checkinChannelId": "1427127028380991538",
+    "greetingChannelId": "1427474320216555584"
   },
   "watcherRoleName": "The Watcher",
   "adminRoleNames": ["Admin", "Moderator"],
