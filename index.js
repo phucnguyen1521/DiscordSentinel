@@ -18,7 +18,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildPresences
   ]
 });
 
@@ -101,12 +102,13 @@ client.on('guildMemberRemove', async (member) => {
   catch (error) { console.error('❌ Error sending goodbye message:', error); }
 });
 
-// -------------------- Chống spam --------------------
+// -------------------- Nhận tin nhắn & chống spam --------------------
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const userId = message.author.id;
   const now = Date.now();
+
   if (!userMessageTimestamps.has(userId)) userMessageTimestamps.set(userId, []);
   const timestamps = userMessageTimestamps.get(userId);
   timestamps.push(now);
@@ -132,6 +134,76 @@ client.on('messageCreate', async (message) => {
       spamData[userId].lastWarning = now;
       await saveSpamData(spamData);
     } catch (error) { console.error('❌ Error sending spam warning:', error); }
+  }
+});
+
+// -------------------- Chào người khi họ online --------------------
+client.on('presenceUpdate', async (oldPresence, newPresence) => {
+  if (!newPresence || !newPresence.user || newPresence.user.bot) return;
+
+  const member = newPresence.member;
+  const oldStatus = oldPresence?.status;
+  const newStatus = newPresence.status;
+
+  // Nếu chuyển từ offline sang online / idle / dnd → gửi chào
+  if (oldStatus === 'offline' && ['online', 'idle', 'dnd'].includes(newStatus)) {
+    const now = new Date();
+    const hour = now.getUTCHours() + 7; // Giờ Việt Nam
+    let timeOfDay;
+
+    if (hour >= 5 && hour < 11) timeOfDay = "sáng";
+    else if (hour >= 11 && hour < 13) timeOfDay = "trưa";
+    else if (hour >= 13 && hour < 18) timeOfDay = "chiều";
+    else if (hour >= 18 && hour < 22) timeOfDay = "tối";
+    else timeOfDay = "khuya";
+
+    const greetings = {
+      sáng: [
+        "Chào buổi sáng tốt lành ☀️",
+        "Dậy sớm dữ ha 😏",
+        "Sáng rồi đó, chúc ngày mới vui vẻ nha 🌞",
+        "Mới sáng ra đã thấy on, siêng ghê 😆"
+      ],
+      trưa: [
+        "Chào buổi trưa nè 🌤️",
+        "Trưa rồi, nghỉ ngơi xíu đi 😌",
+        "Vừa on trưa là biết đói rồi 😋",
+        "Trưa nắng quá mà vẫn on, nể 😎"
+      ],
+      chiều: [
+        "Chiều rồi, khỏe không đó ☕",
+        "Chiều mát on cái là thấy khỏe liền 😎",
+        "Chào buổi chiều, đi chơi chưa 😏",
+        "Chiều zui zẻ nhe 😁"
+      ],
+      tối: [
+        "Chào buổi tối ✨",
+        "Tối rồi còn on, chắc nhớ tui 🤭",
+        "Tối chill nhẹ thôi nha 🎧",
+        "Tối an lành nè 😴"
+      ],
+      khuya: [
+        "Khuya rồi còn on, mất ngủ hả 😩",
+        "Trời đất ơi khuya quá trời 😵",
+        "Ngủ sớm đi, mai còn cày 😪",
+        "Khuya mà vẫn on, cứng dữ 👀"
+      ]
+    };
+
+    const reply = greetings[timeOfDay][Math.floor(Math.random() * greetings[timeOfDay].length)];
+
+    // Lấy kênh để bot gửi lời chào (đặt ID kênh ở đây)
+    const greetingChannelId = config.channels.greetingChannelId;
+    const channel = member.guild.channels.cache.get(greetingChannelId);
+
+    if (channel) {
+      try {
+        await channel.send(`👋 ${member} ${reply}`);
+        console.log(`✅ Gửi lời chào ${member.user.tag} (${timeOfDay})`);
+      } catch (err) {
+        console.error(`❌ Không gửi được lời chào cho ${member.user.tag}:`, err);
+      }
+    }
   }
 });
 
