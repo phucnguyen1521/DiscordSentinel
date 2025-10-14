@@ -157,38 +157,62 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     else if (hour >= 18 && hour < 22) timeOfDay = "tối";
     else timeOfDay = "khuya";
 
-    const greetings = {
-      sáng: [
-        "Chào buổi sáng tốt lành ☀️",
-        "Dậy sớm dữ ha 😏",
-        "Sáng rồi đó, chúc ngày mới vui vẻ nha 🌞",
-        "Mới sáng ra đã thấy on, siêng ghê 😆"
-      ],
-      trưa: [
-        "Chào buổi trưa nè 🌤️",
-        "Trưa rồi, nghỉ ngơi xíu đi 😌",
-        "Vừa on trưa là biết đói rồi 😋",
-        "Trưa nắng quá mà vẫn on, nể 😎"
-      ],
-      chiều: [
-        "Chiều rồi, khỏe không đó ☕",
-        "Chiều mát on cái là thấy khỏe liền 😎",
-        "Chào buổi chiều, đi chơi chưa 😏",
-        "Chiều zui zẻ nhe 😁"
-      ],
-      tối: [
-        "Chào buổi tối ✨",
-        "Tối rồi còn on, chắc nhớ tui 🤭",
-        "Tối chill nhẹ thôi nha 🎧",
-        "Tối an lành nè 😴"
-      ],
-      khuya: [
-        "Khuya rồi còn on, mất ngủ hả 😩",
-        "Trời đất ơi khuya quá trời 😵",
-        "Ngủ sớm đi, mai còn cày 😪",
-        "Khuya mà vẫn on, cứng dữ 👀"
-      ]
-    };
+const greetings = {
+  sáng: [
+    "Chào buổi sáng tốt lành ☀️",
+    "Dậy sớm dữ ha 😏",
+    "Sáng rồi đó, chúc ngày mới vui vẻ nha 🌞",
+    "Ê con ngu kia, on sớm zậy định phá server hả 😤",
+    "Sáng sớm mà on rồi, mày có ngủ bao giờ không 😒",
+    "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
+    "Mới sáng mà thấy mặt là biết hôm nay không yên rồi 😩",
+    "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂",
+    "Onl xớm dữ vậy má ☀️",
+    "Onl giờ này chắc chưa đánh răng luôn quá 🤢"
+  ],
+  trưa: [
+    "Chào buổi trưa nè 🌤️",
+    "Trưa rồi, nghỉ ngơi xíu đi 😌",
+    "Vừa on trưa là biết đói rồi 😋",
+    "On giờ này là khỏi ngủ trưa luôn rồi, giỏi ghê 😴",
+    "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤",
+    "Ủa, trưa mà on chi? Mày không có đời sống hả 😂",
+    "Trưa on là biết rảnh quá rồi đó nha 😎",
+    "On trưa mà than buồn ngủ là tao chửi đó nghe 😏",
+    "Trưa rồi mà mặt vẫn ngáo ngơ, thiếu vitamin hả 😩"
+  ],
+  chiều: [
+    "Chiều on chi nữa, nghỉ xíu đi 😒",
+    "Ủa, chiều rồi mà vẫn chưa biến hả, bám server dữ 👀",
+    "On chiều mà làm như bận lắm vậy 😏",
+    "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆",
+    "Trời ơi chiều nào cũng thấy on, bỏ điện thoại xuống giao tiếp với người nhà đi em 😩",
+    "Chiều rồi đó, đi ra ngoài hít khí trời đi đồ nghiện 😜",
+    "Chiều on chi, định cà khịa ai hở 😈",
+    "Ủa chiều mà chưa ăn gì à, nhìn đói thấy thương luôn 😂"
+  ],
+  tối: [
+    "Ê con khùng, tối rồi on chi nữa 😴",
+    "Tối rồi mà còn ngồi on, mai khỏi dậy nha 😏",
+    "Ủa, tối rồi mà vẫn chưa biến hả, bám dai dữ 👀",
+    "Tối nào cũng thấy mày on, server này của mày hả 😤",
+    "Trời ơi, tối rồi mà vẫn ráng cà khịa à 😈",
+    "On tối chi, không ra ngoài kiếm bồ đi 😎",
+    "Còn chưa tắm mà on, bốc mùi online kìa 🤢",
+    "Ê đồ điên, tối rồi mà on, rảnh quá hả 😂"
+  ],
+  khuya: [
+    "Khuya rồi đồ ngu, ngủ đi chứ on chi 😪",
+    "Ủa, khuya rồi mà vẫn chưa biến hả, bám dai dữ 👀",
+    "Mất ngủ hả con? Khuya zầy còn on 😵",
+    "Khuya rồi mà on, chắc đang rình drama 🤨",
+    "Ủa còn on, tính chơi tới sáng hả 😏",
+    "Con quỷ, khuya zầy mà chưa ngủ, mai khỏi thở luôn 😩",
+    "Ủa, định làm cú đêm luôn hả, server không phát cháo đêm đâu 😤",
+    "Khuya rồi ngủ với mẹ đi em không mẹ buồn đó 🤦‍♂️"
+  ]
+};
+
 
     const reply = greetings[timeOfDay][Math.floor(Math.random() * greetings[timeOfDay].length)];
 
