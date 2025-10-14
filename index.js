@@ -162,11 +162,12 @@ const greetings = {
     "Chào buổi sáng tốt lành ☀️",
     "Ê con ngu kia, on sớm zậy định phá server hả 😤",
     "Một vị cao nhân từng nói: dậy xớm có làm thì mới có ăn không làm mà đòi có ăn thì ăn đầu BUỒI ăn CỨT thế cho nó dễ 😤",
-    "Sáng sớm mà on rồi, mày có ngủ bao giờ không 😒",
     "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
     "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho tao để làm gì? Em không có ước mơ hả? 😩",
     "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂",
+    "Bình minh rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
     "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+    
     
   ],
   trưa: [
@@ -176,6 +177,7 @@ const greetings = {
     "Trưa on là biết rảnh quá rồi đó nha 😎",
     "On trưa mà than buồn ngủ là tao chửi đó nghe 😏",
     "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+    
   ],
   chiều: [
     "Chiều on chi nữa, nghỉ xíu đi 😒",
@@ -183,9 +185,10 @@ const greetings = {
     "On chiều mà làm như bận lắm vậy 😏",
     "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆",
     "Trời ơi chiều nào cũng thấy on, bỏ điện thoại xuống giao tiếp với người nhà đi em 😩",
-    "Chiều rồi đó, đi ra ngoài hít khí trời đi đồ nghiện 😜",
-    "Chiều on chi, định cà khịa ai hở 😈",
+    "Chiều rồi đó, đi ra ngoài hít khí trời chạm cỏ đi đồ nghiện 😜",
+    "Hoàng hôn rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
     "Ủa chiều mà chưa ăn gì à, nhìn đói thấy thương luôn 😂"
+    
   ],
   tối: [
     "Ê con khùng, tối rồi on chi nữa 😴",
@@ -195,16 +198,16 @@ const greetings = {
     "Trời ơi, tối rồi mà vẫn ráng muốn ăn chửi à 😈",
     "On tối chi, không ra ngoài kiếm bồ đi 😎",
     "Còn chưa tắm mà on, bốc mùi online kìa 🤢",
+    "Trời đêm đầy sao rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
     "Ê đồ điên, tối rồi mà on, rảnh quá hả 😂"
+    
   ],
   khuya: [
     "Khuya rồi đồ ngu, ngủ đi chứ on chi 😪",
     "Ủa, khuya rồi mà vẫn chưa biến hả, bám dai dữ 👀",
     "Mất ngủ hả con? Khuya zầy còn on 😵",
     "Khuya rồi mà on, chắc đang rình drama 🤨",
-    "Ủa còn on, tính chơi tới sáng hả 😏",
-    "Con quỷ, khuya zầy mà chưa ngủ, mai khỏi thở luôn 😩",
-    "Ủa, định làm cú đêm luôn hả, server không phát cháo đêm đâu 😤",
+    "Ủa, định làm cú đêm luôn hả, server không phát cháo khuya đâu 😤",
     "Khuya rồi ngủ với mẹ đi em không mẹ buồn đó 🤦‍♂️"
   ]
 };
