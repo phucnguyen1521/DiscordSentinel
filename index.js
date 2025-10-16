@@ -34,7 +34,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => console.log(`Dummy server listening on port ${PORT}`));
 
 // -------------------- Khi bot ready --------------------
-client.once('clientReady', async () => {
+client.once('ready', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
 
   // Register slash commands
