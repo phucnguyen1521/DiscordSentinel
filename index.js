@@ -294,20 +294,21 @@ client.on('interactionCreate', async (interaction) => {
 });
 // -------------------- Push checkin.json lên GitHub --------------------
 const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 async function pushToGitHub() {
-  console.log("📤 Đang đẩy dữ liệu lên GitHub...");
-
-  exec(`
-    git config user.email "bot@render.com"
-    git config user.name "Render Bot"
-    git add data/checkins.json
-    git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"
-    git push https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git HEAD:main
-  `, (error, stdout, stderr) => {
-    if (error) console.error("❌ Lỗi khi push:", error.message);
-    else console.log("✅ Đã đẩy file lên GitHub!");
-  });
+  try {
+    console.log("📤 Đang đẩy dữ liệu lên GitHub...");
+    await execPromise(`git config user.email "bot@render.com"`);
+    await execPromise(`git config user.name "Render Bot"`);
+    await execPromise(`git add data/checkins.json`);
+    await execPromise(`git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"`);
+    await execPromise(`git push https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git HEAD:main`);
+    console.log("✅ Đã đẩy file lên GitHub!");
+  } catch (error) {
+    console.error("❌ Lỗi khi push lên GitHub:", error.message);
+  }
 }
 
 // -------------------- Handle Check-in --------------------
