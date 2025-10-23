@@ -64,10 +64,11 @@ client.once('ready', async () => {
 // === Anti-dead server system ===
 const boredMessages = [
   "😢 Sao đi hết vậy, 1 mình buồn quá...",
-  "😴 Gr này im như tờ, ai còn ở đây hong?",
-  "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭",
-  "💤 5 tiếng trôi qua mà vẫn im lìm... chắc tôi cũng ngủ đây zzzz",
-  "🥲 Hồi xưa đông vui lắm, giờ còn mỗi tôi với mấy con bot..."
+  "😴 Gr này im vl, khứa nào còn ở đây hong?",
+  "👀 Alo? Có ai không hay server này thành cái nghĩa địa rồi 😭",
+  "👀 Alo!!! Dậy chơi với t đi mấy đĩ ơi 😭",
+  "💤 5 tiếng trôi qua mà vẫn im lìm... chắc t cũng ngủ đây zzzz",
+  "🥲 Hồi xưa đông vui lắm, giờ còn mỗi t với mấy con bot..., à mà t cũng là bot mà ta???"
 ];
 
 // Lưu lại lần hoạt động cuối
