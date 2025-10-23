@@ -61,49 +61,70 @@ client.once('ready', async () => {
 
   scheduleTasks();
 });
+
+
 // === Anti-dead server system ===
 const boredMessages = [
   "😢 Sao đi hết vậy, 1 mình buồn quá...",
-  "😴 Gr này im vl, khứa nào còn ở đây hong?",
-  "👀 Alo? Có ai không hay server này thành cái nghĩa địa rồi 😭",
-  "👀 Alo!!! Dậy chơi với t đi mấy đĩ ơi 😭",
-  "💤 5 tiếng trôi qua mà vẫn im lìm... chắc t cũng ngủ đây zzzz",
-  "🥲 Hồi xưa đông vui lắm, giờ còn mỗi t với mấy con bot..., à mà t cũng là bot mà ta???"
+  "😴 Gr này im như tờ, ai còn ở đây hong?",
+  "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭",
+  "😢 Đừng nướng nữa dậy chơi với t đi...",
+  "💤 5 tiếng trôi qua mà vẫn im lìm... chắc tôi cũng ngủ đây zzzz",
+  "🥲 Hồi xưa đông vui lắm, giờ còn mỗi tôi với mấy con bot..."
 ];
 
-// Lưu lại lần hoạt động cuối
+const aliveMessages = [
+  "😳 Ô trời ơi có người rồi!! Tưởng chết hẳn luôn chứ 😭",
+  "🥹 Cuối cùng cũng có tiếng người...",
+  "😆 Haha mấy con heo nái dậy rồi!",
+  "🙌 Server sống lại rồi bà con ơi!!!"
+];
+
+const BORED_CHANNEL_ID = "866686468437049398"; // 👈 ĐỔI dòng này nha!
 let lastActivity = Date.now();
+let serverIsDead = false;
 
-// ID kênh mà bot sẽ gửi tin nhắn vào (điền channel ID của server bạn)
-const BORED_CHANNEL_ID = "866686468437049398"; // ví dụ: "128467193847561920"
-
-// Cập nhật khi có hoạt động
-client.on("messageCreate", (message) => {
+// Cập nhật hoạt động khi có tin nhắn mới
+client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  lastActivity = Date.now();
+  const now = Date.now();
+
+  // Nếu server đang "dead" mà có người nhắn lại
+  if (serverIsDead && now - lastActivity >= 5 * 60 * 60 * 1000) {
+    const channel = client.channels.cache.get(BORED_CHANNEL_ID);
+    if (channel) {
+      const msg = aliveMessages[Math.floor(Math.random() * aliveMessages.length)];
+      await channel.send(msg);
+    }
+    serverIsDead = false;
+  }
+
+  lastActivity = now;
 });
 
+// Khi có người ra/vào voice
 client.on("voiceStateUpdate", (oldState, newState) => {
-  // Nếu có ai vào/ra voice thì tính là hoạt động
   if (oldState.channelId !== newState.channelId) {
     lastActivity = Date.now();
+    serverIsDead = false;
   }
 });
 
-// Kiểm tra định kỳ mỗi 10 phút xem server có "chết" không
+// Kiểm tra định kỳ xem server có "dead" không
 setInterval(async () => {
   const now = Date.now();
   const fiveHours = 5 * 60 * 60 * 1000;
+  const channel = client.channels.cache.get(BORED_CHANNEL_ID);
 
-  if (now - lastActivity >= fiveHours) {
-    const channel = client.channels.cache.get(BORED_CHANNEL_ID);
+  if (!serverIsDead && now - lastActivity >= fiveHours) {
+    // Đã im hơn 5 tiếng → gửi thông điệp "dead"
     if (channel) {
       const msg = boredMessages[Math.floor(Math.random() * boredMessages.length)];
       await channel.send(msg);
-      lastActivity = Date.now(); // reset thời gian để không spam liên tục
+      serverIsDead = true;
     }
   }
-}, 10 * 60 * 1000); // kiểm tra mỗi 10 phút
+}, 10 * 60 * 1000); // Kiểm tra mỗi 10 phút
 
 // -------------------- Sự kiện member join --------------------
 client.on('guildMemberAdd', async (member) => {
