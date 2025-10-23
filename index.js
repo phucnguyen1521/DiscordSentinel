@@ -292,6 +292,23 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 });
+// -------------------- Push checkin.json lên GitHub --------------------
+const { exec } = require('child_process');
+
+async function pushToGitHub() {
+  console.log("📤 Đang đẩy dữ liệu lên GitHub...");
+
+  exec(`
+    git config user.email "bot@render.com"
+    git config user.name "Render Bot"
+    git add data/checkins.json
+    git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"
+    git push https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git HEAD:main
+  `, (error, stdout, stderr) => {
+    if (error) console.error("❌ Lỗi khi push:", error.message);
+    else console.log("✅ Đã đẩy file lên GitHub!");
+  });
+}
 
 // -------------------- Handle Check-in --------------------
 async function handleCheckin(interaction) {
@@ -322,6 +339,7 @@ async function handleCheckin(interaction) {
   checkins[month][userId].dates.push(today);
   checkins[month][userId].total++;
   await saveCheckins(checkins);
+  await pushToGitHub(); // Đẩy file lên GitHub
 
   const checkinChannel = interaction.guild.channels.cache.get(config.channels.checkinChannelId);
   const embed = new EmbedBuilder()
