@@ -608,7 +608,7 @@ async function handleExit(signal) {
   console.log(`[!] Received ${signal}, shutting down gracefully...`);
   const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
   if (channel) {
-    await channel.send("🥺 Bot sắp off rồi mấy khứa ơi... nhớ tui nha!");
+    await channel.send("🥺 Bot sắp off rồi mấy khứa ơi... nhớ tui nha!.....Thằng code sửa t lẹ coiiiii!!!");
   }
   process.exit(0);
 }
@@ -620,7 +620,7 @@ process.on("uncaughtException", async (err) => {
   console.error("[!] Uncaught Exception:", err);
   const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
   if (channel) {
-    await channel.send("💀 T bị lỗi gì đó rồi nên sắp đi đây... cầu nguyện cho t restart lại đi 🪦....Thằng code sauwr t lẹ coiiiii!!!");
+    await channel.send("💀 T bị lỗi gì đó rồi nên sắp đi đây... cầu nguyện cho t restart lại đi 🪦....Thằng code sửa t lẹ coiiiii!!!");
   }
   process.exit(1);
 });
