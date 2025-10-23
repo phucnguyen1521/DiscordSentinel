@@ -61,6 +61,48 @@ client.once('ready', async () => {
 
   scheduleTasks();
 });
+// === Anti-dead server system ===
+const boredMessages = [
+  "😢 Sao đi hết vậy, 1 mình buồn quá...",
+  "😴 Gr này im như tờ, ai còn ở đây hong?",
+  "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭",
+  "💤 5 tiếng trôi qua mà vẫn im lìm... chắc tôi cũng ngủ đây zzzz",
+  "🥲 Hồi xưa đông vui lắm, giờ còn mỗi tôi với mấy con bot..."
+];
+
+// Lưu lại lần hoạt động cuối
+let lastActivity = Date.now();
+
+// ID kênh mà bot sẽ gửi tin nhắn vào (điền channel ID của server bạn)
+const BORED_CHANNEL_ID = "866686468437049398"; // ví dụ: "128467193847561920"
+
+// Cập nhật khi có hoạt động
+client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
+  lastActivity = Date.now();
+});
+
+client.on("voiceStateUpdate", (oldState, newState) => {
+  // Nếu có ai vào/ra voice thì tính là hoạt động
+  if (oldState.channelId !== newState.channelId) {
+    lastActivity = Date.now();
+  }
+});
+
+// Kiểm tra định kỳ mỗi 10 phút xem server có "chết" không
+setInterval(async () => {
+  const now = Date.now();
+  const fiveHours = 5 * 60 * 60 * 1000;
+
+  if (now - lastActivity >= fiveHours) {
+    const channel = client.channels.cache.get(BORED_CHANNEL_ID);
+    if (channel) {
+      const msg = boredMessages[Math.floor(Math.random() * boredMessages.length)];
+      await channel.send(msg);
+      lastActivity = Date.now(); // reset thời gian để không spam liên tục
+    }
+  }
+}, 10 * 60 * 1000); // kiểm tra mỗi 10 phút
 
 // -------------------- Sự kiện member join --------------------
 client.on('guildMemberAdd', async (member) => {
