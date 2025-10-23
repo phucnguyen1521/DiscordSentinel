@@ -36,6 +36,18 @@ http.createServer((req, res) => {
 // -------------------- Khi bot ready --------------------
 client.once('ready', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
+  
+// 👋 Gửi lời chào khi bot on
+const channel = client.channels.cache.get("YOUR_CHANNEL_ID"); // 👈 sửa ID kênh text
+if (channel) {
+  const greetings = [
+    "😎 Alo alo, tao on lại rồi nè mấy khứa!",
+    "🧟‍♂️ Tao đã sống lại sau cái chết tạm thời 😭",
+    "🔥 Restart xong rồi, tiếp tục phá nào!",
+    "🫡 Vừa reboot xong, có ai nhớ t không?",
+  ];
+  channel.send(greetings[Math.floor(Math.random() * greetings.length)]);
+}
 
   // Register slash commands
   const commands = [
@@ -592,6 +604,26 @@ if (!process.env.DISCORD_BOT_TOKEN) {
 
 client.login(process.env.DISCORD_BOT_TOKEN);
 
+async function handleExit(signal) {
+  console.log(`[!] Received ${signal}, shutting down gracefully...`);
+  const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
+  if (channel) {
+    await channel.send("🥺 Bot sắp off rồi mấy khứa ơi... nhớ tui nha!");
+  }
+  process.exit(0);
+}
+
+process.on("SIGINT", () => handleExit("SIGINT"));
+process.on("SIGTERM", () => handleExit("SIGTERM"));
+
+process.on("uncaughtException", async (err) => {
+  console.error("[!] Uncaught Exception:", err);
+  const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
+  if (channel) {
+    await channel.send("💀 T bị lỗi gì đó rồi nên sắp đi đây... cầu nguyện cho t restart lại đi 🪦....Thằng code sauwr t lẹ coiiiii!!!");
+  }
+  process.exit(1);
+});
 
 
 
