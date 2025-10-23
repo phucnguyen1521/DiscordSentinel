@@ -109,33 +109,60 @@ client.on('messageCreate', async (message) => {
   const userId = message.author.id;
   const now = Date.now();
 
+  // Lấy dữ liệu spam
+  const spamData = await getSpamData();
+  if (!spamData[userId]) spamData[userId] = { count: 0, lastWarning: null, bannedUntil: 0 };
+
+  // ⚠️ Kiểm tra nếu user đang bị chặn tạm thời
+  if (spamData[userId].bannedUntil && now < spamData[userId].bannedUntil) {
+    try {
+      await message.delete().catch(() => {});
+      const remaining = Math.ceil((spamData[userId].bannedUntil - now) / 1000 / 60);
+      await message.channel.send({
+        content: `<@${userId}> ⛔ Bạn đang bị chặn tạm thời! Vui lòng chờ **${remaining} phút** nữa mới được nhắn lại.`,
+      });
+    } catch (err) {
+      console.error("❌ Error deleting spam message:", err);
+    }
+    return;
+  }
+
+  // Lưu timestamp tin nhắn
   if (!userMessageTimestamps.has(userId)) userMessageTimestamps.set(userId, []);
   const timestamps = userMessageTimestamps.get(userId);
   timestamps.push(now);
 
+  // Lọc tin nhắn trong khoảng thời gian config
   const recentMessages = timestamps.filter(ts => now - ts < config.antiSpam.timeWindowMs);
   userMessageTimestamps.set(userId, recentMessages);
 
+  // Nếu vượt ngưỡng spam
   if (recentMessages.length > config.antiSpam.maxMessages) {
     try {
       const embed = new EmbedBuilder()
         .setColor(config.colors.warning)
         .setTitle('⚠️ Cảnh báo Spam')
-        .setDescription(config.antiSpam.warningMessage)
+        .setDescription(`${config.antiSpam.warningMessage}\n\n⏳ Bạn bị chặn nhắn trong **5 phút**!`)
         .setFooter({ text: 'Vui lòng tuân thủ quy tắc server' })
         .setTimestamp();
 
       await message.channel.send({ content: `${message.author}`, embeds: [embed] });
+
+      // Reset tin nhắn của người đó
       userMessageTimestamps.set(userId, []);
 
-      const spamData = await getSpamData();
-      if (!spamData[userId]) spamData[userId] = { count: 0, lastWarning: null };
+      // Ghi log spam
       spamData[userId].count++;
       spamData[userId].lastWarning = now;
+      spamData[userId].bannedUntil = now + 5 * 60 * 1000; // ⏰ Cấm 5 phút
+
       await saveSpamData(spamData);
-    } catch (error) { console.error('❌ Error sending spam warning:', error); }
+    } catch (error) {
+      console.error('❌ Error sending spam warning:', error);
+    }
   }
 });
+
 
 // -------------------- Chào người khi họ online --------------------
 
