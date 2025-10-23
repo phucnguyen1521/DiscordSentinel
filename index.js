@@ -38,13 +38,13 @@ client.once('ready', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
   
 // 👋 Gửi lời chào khi bot on
-const channel = client.channels.cache.get("YOUR_CHANNEL_ID"); // 👈 sửa ID kênh text
+const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
 if (channel) {
   const greetings = [
     "😎 Alo alo, tao on lại rồi nè mấy khứa!",
     "🧟‍♂️ Tao đã sống lại sau cái chết tạm thời 😭",
     "🔥 Restart xong rồi, tiếp tục phá nào!",
-    "🫡 Vừa reboot xong, có ai nhớ t không?",
+    "🫡 Vừa reboot xong, có ai nhớ t không?"
   ];
   channel.send(greetings[Math.floor(Math.random() * greetings.length)]);
 }
