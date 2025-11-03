@@ -44,7 +44,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => console.log(`🌐 Dummy server listening on port ${PORT}`));
 
 // ========================= BOT READY =========================
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
 
   const now = new Date();
@@ -330,37 +330,42 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 });
 
 // ========================= SLASH COMMAND HANDLER =========================
+// ========================= SLASH COMMAND HANDLER =========================
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-  const { commandName, member } = interaction;
+  const { commandName } = interaction;
 
   if (commandName === 'checkin') await handleCheckin(interaction);
   else if (commandName === 'status') await handleStatus(interaction);
-  else if (commandName === 'reset-checkin') await handleResetCheckin(interaction, member);
+  else if (commandName === 'reset-checkin') await handleResetCheckin(interaction, interaction.member);
   else if (commandName === 'birthday') {
     const date = interaction.options.getString('date');
     const regex = /^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])$/;
-    if (!regex.test(date))
-      return interaction.reply({ content: '❌ Sai định dạng DD-MM', ephemeral: true });
+    if (!regex.test(date)) {
+      return interaction.reply({ content: '❌ Sai định dạng DD-MM', flags: 64 }); // 64 = EPHEMERAL
+    }
+
+    await interaction.deferReply({ flags: 64 }); // EPHEMERAL
+
     const b = await getBirthdays();
     b[interaction.user.id] = date;
     await saveBirthdays(b);
-    await interaction.reply({ content: `✅ Lưu ngày sinh: **${date}** 🎂`, ephemeral: true });
+
+    await interaction.editReply({ content: `✅ Lưu ngày sinh: **${date}** 🎂` });
   }
 });
 
-// 🎉 Cron chúc mừng sinh nhật và các ngày lễ
+// ========================= CRON SINH NHẬT & NGÀY LỄ =========================
 cron.schedule('0 8 * * *', async () => {
   try {
     const today = new Date();
     const day = today.getDate().toString().padStart(2, '0');
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const todayStr = `${day}-${month}`;
-    const year = today.getFullYear().toString();
-    const channel = client.channels.cache.get("866686468437049398"); // 🔄 Thay ID nếu cần
+    const channel = client.channels.cache.get("866686468437049398"); // Thay ID kênh nếu cần
     if (!channel) return;
 
-    // 🎂 Sinh nhật người dùng
+    // ===== Sinh nhật người dùng =====
     const birthdays = await getBirthdays();
     const usersWithBirthday = Object.entries(birthdays)
       .filter(([_, date]) => date === todayStr)
@@ -380,12 +385,12 @@ cron.schedule('0 8 * * *', async () => {
       const member = await channel.guild.members.fetch(userId).catch(() => null);
       if (member) {
         const msg = birthdayMessages[Math.floor(Math.random() * birthdayMessages.length)]
-          .replace("{user}", `${member}`);
+          .replace("{user}", `<@${member.id}>`);
         await channel.send(msg);
       }
     }
 
-    // 🗓️ Ngày lễ dương lịch cố định
+    // ===== Ngày lễ dương lịch cố định =====
     const specialEvents = {
       "01-01": "🎆 **Chúc mừng năm mới!** Năm nay nhất định sẽ là năm tuyệt vời của chúng ta 🥳✨",
       "14-02": "💘 **Valentine’s Day!** Gửi thật nhiều yêu thương đến những trái tim đang rung động 💞",
@@ -394,24 +399,20 @@ cron.schedule('0 8 * * *', async () => {
       "20-10": "🌷 **Ngày Phụ nữ Việt Nam 20/10!** Chúc các chị em luôn xinh đẹp, tự tin và ngập tràn yêu thương 💝",
       "24-12": "🎄 **Giáng sinh an lành!** Chúc bạn một mùa Noel ấm áp, tràn tiếng cười và quà đầy tay 🎁🎅"
     };
+    if (specialEvents[todayStr]) await channel.send(specialEvents[todayStr]);
 
-    if (specialEvents[todayStr]) {
-      await channel.send(specialEvents[todayStr]);
-    }
-
-    // 🧧 Tết Nguyên Đán & 🌕 Trung Thu 3 năm tiếp theo (dương lịch)
-    const lunarHolidays3Years = {
-      "2025": { "31-01": "🧧 **Tết Nguyên Đán 2025!** Chúc năm mới an khang, vạn sự như ý 🍊🐉",
-                "29-09": "🌕 **Trung Thu 2025!** Chúc đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵" },
-      "2026": { "15-02": "🧧 **Tết Nguyên Đán 2026!** Chúc năm mới hạnh phúc, may mắn 🌟",
-                "29-09": "🌕 **Trung Thu 2026!** Chúc đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵" },
-      "2027": { "06-02": "🧧 **Tết Nguyên Đán 2027!** Chúc năm mới an khang, vạn sự như ý 🍊🐉",
-                "18-09": "🌕 **Trung Thu 2027!** Chúc đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵" }
+    // ===== Tết âm & Trung Thu (3 năm tới) =====
+    // Cập nhật dễ dàng: chỉ thêm/xóa entry theo format "YYYY-MM-DD"
+    const lunarSpecialEvents = {
+      "2026-02-10": "🧧 **Chúc mừng Tết Nguyên Đán 2026!** Cầu mong năm mới an khang, vạn sự như ý 🍊🐉",
+      "2026-09-29": "🌕 **Trung Thu 2026!** Chúc bạn đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵",
+      "2027-01-30": "🧧 **Chúc mừng Tết Nguyên Đán 2027!** Năm mới hạnh phúc, bình an và thịnh vượng 🐲🎉",
+      "2027-09-18": "🌕 **Trung Thu 2027!** Chúc bạn đêm rằm thật đẹp, sum vầy bên gia đình 🌝🍵",
+      "2028-02-18": "🧧 **Chúc mừng Tết Nguyên Đán 2028!** Năm mới phát tài phát lộc, vui khỏe, vạn sự như ý 🍊🐲",
+      "2028-10-06": "🌕 **Trung Thu 2028!** Chúc bạn đêm rằm thật đẹp, đầy bánh nướng, trà ngon và hạnh phúc 🌝🍵"
     };
-
-    if (lunarHolidays3Years[year] && lunarHolidays3Years[year][todayStr]) {
-      await channel.send(lunarHolidays3Years[year][todayStr]);
-    }
+    const todayISO = today.toISOString().slice(0, 10); // YYYY-MM-DD
+    if (lunarSpecialEvents[todayISO]) await channel.send(lunarSpecialEvents[todayISO]);
 
   } catch (err) {
     console.error("❌ Lỗi khi chúc mừng ngày đặc biệt:", err);
