@@ -13,8 +13,11 @@ const {
   getRoleAssignments,
   saveRoleAssignments,
   getTodayKey,
-  getMonthKey
+  getMonthKey,
+  getBirthdays,
+  saveBirthdays
 } = require('./utils');
+
 
 // ---------------------------------- CLIENT ----------------------------------
 const client = new Client({
