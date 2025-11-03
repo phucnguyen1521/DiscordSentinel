@@ -1,5 +1,11 @@
-const { 
-  Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, REST, Routes 
+// ========================= IMPORTS =========================
+const {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  PermissionFlagsBits,
+  REST,
+  Routes
 } = require('discord.js');
 const cron = require('node-cron');
 const http = require('http');
@@ -15,7 +21,7 @@ const {
   getBirthdays, saveBirthdays
 } = require('./utils');
 
-// ---------------------------------- CLIENT ----------------------------------
+// ========================= CLIENT SETUP =========================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -23,20 +29,21 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildPresences
-  ]
+  ],
+  partials: ['USER', 'GUILD_MEMBER']
 });
 
 const botStartTime = Date.now();
 const userMessageTimestamps = new Map();
 
-// -------------------- Dummy server để Render free tier --------------------
+// ========================= DUMMY SERVER (Render keepalive) =========================
 const PORT = process.env.PORT || 10000;
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('Bot is running!\n');
-}).listen(PORT, () => console.log(`Dummy server listening on port ${PORT}`));
+}).listen(PORT, () => console.log(`🌐 Dummy server listening on port ${PORT}`));
 
-// -------------------- Khi bot ready --------------------
+// ========================= BOT READY =========================
 client.once('ready', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
 
@@ -58,13 +65,13 @@ client.once('ready', async () => {
     console.log("🌙 Bot restart trong khung 3h–7h → không gửi lời chào.");
   }
 
-  // Register slash commands
+  // ==== Đăng Slash Commands ====
   const commands = [
     { name: 'checkin', description: 'Điểm danh hàng ngày để theo dõi sự tham gia' },
     { name: 'status', description: 'Hiển thị trạng thái bot và thống kê' },
     { name: 'reset-checkin', description: 'Đặt lại dữ liệu điểm danh (Chỉ Admin)' },
-    { 
-      name: 'birthday', 
+    {
+      name: 'birthday',
       description: 'Đăng ký ngày sinh của bạn',
       options: [
         {
@@ -78,10 +85,17 @@ client.once('ready', async () => {
   ];
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+
   try {
-    for (const guild of client.guilds.cache.values()) {
-      await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: commands });
-    }
+    const guilds = await client.guilds.fetch();
+    await Promise.all([...guilds.values()].map(async g => {
+      try {
+        await rest.put(Routes.applicationGuildCommands(client.user.id, g.id), { body: commands });
+        console.log(`✅ Registered commands for guild ${g.id}`);
+      } catch (e) {
+        console.warn(`⚠️ Không thể register commands cho guild ${g.id}:`, e.message);
+      }
+    }));
     console.log('✅ Slash commands registered!');
   } catch (error) {
     console.error('❌ Error registering commands:', error);
@@ -90,45 +104,50 @@ client.once('ready', async () => {
   scheduleTasks();
 });
 
-// -------------------- Push data lên GitHub --------------------
+// ========================= PUSH TO GITHUB =========================
 async function pushToGitHub() {
+  if (!process.env.GITHUB_USERNAME || !process.env.GITHUB_TOKEN || !process.env.GITHUB_REPO) {
+    console.warn('⚠️ Bỏ qua pushToGitHub: thiếu biến môi trường GITHUB_*');
+    return;
+  }
   try {
     console.log("📤 Đang đẩy dữ liệu lên GitHub...");
     await execPromise(`git config user.email "bot@render.com"`);
     await execPromise(`git config user.name "Render Bot"`);
     await execPromise(`git add data/checkins.json`);
     await execPromise(`git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"`);
-    await execPromise(`git push https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git HEAD:main`);
+    const remote = `https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git`;
+    await execPromise(`git push ${remote} HEAD:main`);
     console.log("✅ Đã đẩy file lên GitHub!");
   } catch (error) {
-    console.error("❌ Lỗi khi push lên GitHub:", error.message);
+    console.error("❌ Lỗi khi push lên GitHub:", error?.message || error);
   }
 }
 
-// -------------------- Các nhiệm vụ tự động --------------------
+// ========================= CRON TASKS =========================
 cron.schedule('0 3 * * *', async () => {
   const channel = client.channels.cache.get("866686468437049398");
   if (channel) await channel.send("😴 Bái bai bây t đi ngủ đây... mai gặp lại mấy khứa 😪");
   await pushToGitHub();
   console.log("🕒 Đã push data, chuẩn bị restart bot...");
   setTimeout(() => process.exit(0), 5000);
-});
+}, { timezone: "Asia/Ho_Chi_Minh" });
 
 cron.schedule('0 7 * * *', async () => {
   const channel = client.channels.cache.get("866686468437049398");
   if (channel) await channel.send("🌞 Dậy làm việc tiếp thôi nào mấy khứa ơi!!!");
-});
+}, { timezone: "Asia/Ho_Chi_Minh" });
 
-// === Anti-dead system ===
+// ========================= ANTI-DEAD SYSTEM =========================
 const BORED_CHANNEL_ID = "866686468437049398";
 const boredMessages = [
   "😢 Sao đi hết vậy, 1 mình buồn quá...",
   "😴 Gr này im như tờ, ai còn ở đây hong?",
-  "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭",
+  "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭"
 ];
 const aliveMessages = [
   "😳 Ô trời ơi có người rồi!! Tưởng chết hẳn luôn chứ 😭",
-  "🥹 Cuối cùng cũng có tiếng người...",
+  "🥹 Cuối cùng cũng có tiếng người..."
 ];
 let lastActivity = Date.now();
 let serverIsDead = false;
@@ -153,7 +172,7 @@ setInterval(async () => {
   }
 }, 10 * 60 * 1000);
 
-// -------------------- Guild member join/leave --------------------
+// ========================= GUILD JOIN/LEAVE =========================
 client.on('guildMemberAdd', async (member) => {
   const ch = member.guild.channels.cache.get(config.channels.welcomeChannelId);
   if (!ch) return;
@@ -177,9 +196,8 @@ client.on('guildMemberRemove', async (member) => {
     .setTimestamp();
   await ch.send({ embeds: [e] });
 });
-// -------------------- Chào người khi họ online --------------------
 
-// 🌀 Tạo hàm shuffler để tránh trùng lặp lời chào
+// ========================= GREETING SYSTEM =========================
 function createShuffler(arr) {
   const original = Array.isArray(arr) ? [...arr] : [];
   let pool = [...original];
@@ -191,58 +209,41 @@ function createShuffler(arr) {
   };
 }
 
-// 💬 Danh sách lời chào phân theo thời gian trong ngày
 const greetings = {
   sáng: [
     "Chào buổi sáng tốt lành ☀️",
     "Ê con ngu kia, on sớm zậy định phá server hả 😤",
     "Một vị cao nhân từng nói: dậy xớm có làm thì mới có ăn không làm mà đòi có ăn thì ăn đầu BUỒI ăn CỨT thế cho nó dễ 😤",
     "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
-    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa, đi kiếm tiền. Dành nhiều thời gian như vậy cho tao để làm gì? Em không có ước mơ hả? 😩",
-    "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂",
-    "Bình minh rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
-    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa... 😩",
+    "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂"
   ],
   trưa: [
     "Chào buổi trưa nè 🌤️",
     "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤",
     "Ủa, trưa mà on chi? Mày không có đời sống hả 😂",
-    "Trưa on là biết rảnh quá rồi đó nha 😎",
-    "On trưa mà than buồn ngủ là tao chửi đó nghe 😏",
-    "Chào.... ủa là mày hả? đồ ngu đồ ăn hại. Cút mẹ mày đi 😩"
+    "Trưa on là biết rảnh quá rồi đó nha 😎"
   ],
   chiều: [
     "Chiều on chi nữa, nghỉ xíu đi 😒",
     "Ủa, chiều rồi mà vẫn chưa biến hả, bám server dữ 👀",
     "On chiều mà làm như bận lắm vậy 😏",
-    "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆",
-    "Trời ơi chiều nào cũng thấy on, bỏ điện thoại xuống giao tiếp với người nhà đi em 😩",
-    "Chiều rồi đó, đi ra ngoài hít khí trời chạm cỏ đi đồ nghiện 😜",
-    "Hoàng hôn rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
-    "Ủa chiều mà chưa ăn gì à, nhìn đói thấy thương luôn 😂"
+    "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆"
   ],
   tối: [
     "Ê con khùng, tối rồi on chi nữa 😴",
     "Tối rồi mà còn ngồi on, mai khỏi dậy nha 😏",
     "Ủa, tối rồi mà vẫn chưa biến hả, bám dai dữ 👀",
-    "Tối nào cũng thấy mày on, server này của mày hả 😤",
-    "Trời ơi, tối rồi mà vẫn ráng muốn ăn chửi à 😈",
-    "On tối chi, không ra ngoài kiếm bồ đi 😎",
-    "Còn chưa tắm mà on, bốc mùi online kìa 🤢",
-    "Trời đêm đầy sao rất đẹp. Giống mày bây giờ tuy đẹp mà không có Não 😂",
-    "Ê đồ điên, tối rồi mà on, rảnh quá hả 😂"
+    "On tối chi, không ra ngoài kiếm bồ đi 😎"
   ],
   khuya: [
     "Khuya rồi đồ ngu, ngủ đi chứ on chi 😪",
     "Ủa, khuya rồi mà vẫn chưa biến hả, bám dai dữ 👀",
     "Mất ngủ hả con? Khuya zầy còn on 😵",
-    "Khuya rồi mà on, chắc đang rình drama 🤨",
-    "Ủa, định làm cú đêm luôn hả, server không phát cháo khuya đâu 😤",
-    "Khuya rồi ngủ với mẹ đi em không mẹ buồn đó 🤦‍♂️"
+    "Khuya rồi mà on, chắc đang rình drama 🤨"
   ]
 };
 
-// 🧩 Tạo shuffler riêng cho từng buổi
 const shufflers = {
   sáng: createShuffler(greetings.sáng),
   trưa: createShuffler(greetings.trưa),
@@ -251,14 +252,12 @@ const shufflers = {
   khuya: createShuffler(greetings.khuya)
 };
 
-// 🕗 Danh sách người đã được chào trong mỗi buổi
 let greetedUsers = new Set();
 let currentPeriod = null;
 
-// 🔁 Xác định buổi hiện tại (theo giờ VN)
 function getPeriod() {
   const now = new Date();
-  const hour = (now.getUTCHours() + 7) % 24; // UTC+7 (giờ VN)
+  const hour = (now.getUTCHours() + 7) % 24;
   if (hour >= 5 && hour < 11) return 'sáng';
   if (hour >= 11 && hour < 13) return 'trưa';
   if (hour >= 13 && hour < 18) return 'chiều';
@@ -266,17 +265,22 @@ function getPeriod() {
   return 'khuya';
 }
 
-// 🎯 Sự kiện chào khi online
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
   try {
-    if (!newPresence || !newPresence.user || newPresence.user.bot) return;
+    if (!newPresence) return;
+    const userId = newPresence.userId || newPresence.user?.id;
+    if (!userId) return;
+    if (client.users.cache.get(userId)?.bot) return;
 
-    const member = newPresence.member;
-    const userId = newPresence.user.id;
+    let member = newPresence.member;
+    if (!member) {
+      const guild = client.guilds.cache.get(newPresence.guild?.id || newPresence.guildId);
+      if (guild) member = await guild.members.fetch(userId).catch(() => null);
+    }
+    if (!member) return;
+
     const oldStatus = oldPresence?.status;
     const newStatus = newPresence.status;
-
-    // Khi người dùng vừa chuyển từ offline → online
     const wentOnline =
       (oldStatus === 'offline' || oldStatus === 'invisible' || oldStatus === undefined) &&
       newStatus === 'online';
@@ -284,37 +288,34 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
       (oldStatus === 'idle' || oldStatus === 'dnd') && newStatus === 'online';
     if (!wentOnline && !resumedFromIdleOrDnd) return;
 
-    // 🕐 Xác định buổi hiện tại
     const period = getPeriod();
-
-    // 🧹 Nếu sang buổi mới → reset danh sách người đã được chào
     if (period !== currentPeriod) {
       currentPeriod = period;
       greetedUsers.clear();
       console.log(`🕒 Đã chuyển sang buổi "${period}" — reset danh sách chào.`);
     }
 
-    // 🚫 Nếu người này đã được chào trong buổi này → bỏ qua
     if (greetedUsers.has(userId)) return;
     greetedUsers.add(userId);
 
-    // 🎲 Lấy lời chào ngẫu nhiên
-    const getGreeting = shufflers[period];
+    const getGreeting = shufflers[period] || (() => 'Chào bạn!');
     const chosen = getGreeting();
-
-    // 🔊 Gửi lời chào vào kênh cấu hình
     const greetingChannelId = config.channels.greetingChannelId;
-    const channel = member.guild.channels.cache.get(greetingChannelId);
-    if (!channel)
-      return console.warn(`⚠️ Greeting channel ID ${greetingChannelId} not found.`);
+    if (!greetingChannelId) return console.warn('⚠️ greetingChannelId chưa cấu hình!');
+
+    const channel =
+      member.guild.channels.cache.get(greetingChannelId) ||
+      await member.guild.channels.fetch(greetingChannelId).catch(() => null);
+    if (!channel) return;
 
     await channel.send(`👋 <@${userId}> ${chosen}`);
     console.log(`✅ Gửi lời chào ${member.user.tag} (${period}): ${chosen}`);
   } catch (err) {
-    console.error('❌ Lỗi khi gửi lời chào:', err);
+    console.error('❌ Lỗi khi xử lý presenceUpdate:', err);
   }
 });
-// -------------------- Slash commands handler --------------------
+
+// ========================= SLASH COMMAND HANDLER =========================
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const { commandName, member } = interaction;
@@ -334,7 +335,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-// -------------------- Handle Checkin --------------------
+// ========================= CHECKIN / STATUS / RESET =========================
 async function handleCheckin(interaction) {
   await interaction.deferReply({ ephemeral: true });
   const userId = interaction.user.id;
@@ -352,7 +353,6 @@ async function handleCheckin(interaction) {
   await interaction.editReply('✅ Điểm danh thành công!');
 }
 
-// -------------------- Handle Status --------------------
 async function handleStatus(interaction) {
   const uptime = Date.now() - botStartTime;
   const h = Math.floor(uptime / 3600000);
@@ -366,7 +366,6 @@ async function handleStatus(interaction) {
   await interaction.reply({ embeds: [embed] });
 }
 
-// -------------------- Handle Reset Checkin --------------------
 async function handleResetCheckin(interaction, member) {
   const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
   if (!isAdmin)
@@ -375,12 +374,22 @@ async function handleResetCheckin(interaction, member) {
   await interaction.reply('✅ Đã reset dữ liệu điểm danh!');
 }
 
-// -------------------- Scheduled Tasks --------------------
+// ========================= SCHEDULED TASKS =========================
 function scheduleTasks() {
-  cron.schedule('0 0 * * *', () => console.log('⏰ Daily maintenance check'));
+  cron.schedule('0 0 * * *', () => console.log('⏰ Daily maintenance check'), {
+    timezone: "Asia/Ho_Chi_Minh"
+  });
 }
 
-// -------------------- Login --------------------
+// ========================= ERROR HANDLING =========================
+process.on('unhandledRejection', (err) => {
+  console.error('⚠️ Unhandled Rejection:', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err);
+});
+
+// ========================= LOGIN =========================
 if (!process.env.DISCORD_BOT_TOKEN) {
   console.error('❌ ERROR: DISCORD_BOT_TOKEN is not set!');
   process.exit(1);
