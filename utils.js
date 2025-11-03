@@ -1,87 +1,65 @@
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, 'data');
-const CHECKIN_FILE = path.join(DATA_DIR, 'checkins.json');
-const SPAM_FILE = path.join(DATA_DIR, 'spam.json');
-const ROLE_ASSIGNMENTS_FILE = path.join(DATA_DIR, 'role_assignments.json');
-const BIRTHDAY_FILE = path.join(DATA_DIR, 'birthdays.json');
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
-async function getBirthdays() {
-  return await readJSON(BIRTHDAY_FILE, {});
+const checkinFile = path.join(dataDir, 'checkins.json');
+const spamFile = path.join(dataDir, 'spam.json');
+const roleFile = path.join(dataDir, 'roles.json');
+const birthdayFile = path.join(dataDir, 'birthdays.json');
+
+function ensureFile(file) {
+  if (!fs.existsSync(file)) fs.writeFileSync(file, '{}', 'utf8');
 }
+[checkinFile, spamFile, roleFile, birthdayFile].forEach(ensureFile);
 
-async function saveBirthdays(data) {
-  await writeJSON(BIRTHDAY_FILE, data);
-}
-
-
-async function ensureDataDir() {
+async function readJson(file) {
   try {
-    await fs.access(DATA_DIR);
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
+    return {};
   }
 }
-
-async function readJSON(filePath, defaultValue = {}) {
-  try {
-    const data = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return defaultValue;
-  }
+async function writeJson(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
 
-async function writeJSON(filePath, data) {
-  await ensureDataDir();
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-}
+// ==== Checkins ====
+async function getCheckins() { return await readJson(checkinFile); }
+async function saveCheckins(data) { await writeJson(checkinFile, data); }
 
-async function getCheckins() {
-  return await readJSON(CHECKIN_FILE, {});
-}
+// ==== Spam data ====
+async function getSpamData() { return await readJson(spamFile); }
+async function saveSpamData(data) { await writeJson(spamFile, data); }
 
-async function saveCheckins(checkins) {
-  await writeJSON(CHECKIN_FILE, checkins);
-}
+// ==== Roles ====
+async function getRoleAssignments() { return await readJson(roleFile); }
+async function saveRoleAssignments(data) { await writeJson(roleFile, data); }
 
-async function getSpamData() {
-  return await readJSON(SPAM_FILE, {});
-}
+// ==== Birthdays ====
+async function getBirthdays() { return await readJson(birthdayFile); }
+async function saveBirthdays(data) { await writeJson(birthdayFile, data); }
 
-async function saveSpamData(spamData) {
-  await writeJSON(SPAM_FILE, spamData);
-}
-
-async function getRoleAssignments() {
-  return await readJSON(ROLE_ASSIGNMENTS_FILE, []);
-}
-
-async function saveRoleAssignments(assignments) {
-  await writeJSON(ROLE_ASSIGNMENTS_FILE, assignments);
-}
-
+// ==== Helpers ====
 function getTodayKey() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const d = String(now.getDate()).padStart(2, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  return `${d}-${m}-${y}`;
 }
-
 function getMonthKey() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  return `${m}-${y}`;
 }
 
 module.exports = {
-  getCheckins,
-  saveCheckins,
-  getSpamData,
-  saveSpamData,
-  getRoleAssignments,
-  saveRoleAssignments,
-  getTodayKey,
-  getMonthKey,
-  getBirthdays,
-saveBirthdays
-
+  getCheckins, saveCheckins,
+  getSpamData, saveSpamData,
+  getRoleAssignments, saveRoleAssignments,
+  getBirthdays, saveBirthdays,
+  getTodayKey, getMonthKey
 };
