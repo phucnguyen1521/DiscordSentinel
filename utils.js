@@ -5,6 +5,16 @@ const DATA_DIR = path.join(__dirname, 'data');
 const CHECKIN_FILE = path.join(DATA_DIR, 'checkins.json');
 const SPAM_FILE = path.join(DATA_DIR, 'spam.json');
 const ROLE_ASSIGNMENTS_FILE = path.join(DATA_DIR, 'role_assignments.json');
+const BIRTHDAY_FILE = path.join(DATA_DIR, 'birthdays.json');
+
+async function getBirthdays() {
+  return await readJSON(BIRTHDAY_FILE, {});
+}
+
+async function saveBirthdays(data) {
+  await writeJSON(BIRTHDAY_FILE, data);
+}
+
 
 async function ensureDataDir() {
   try {
@@ -70,5 +80,8 @@ module.exports = {
   getRoleAssignments,
   saveRoleAssignments,
   getTodayKey,
-  getMonthKey
+  getMonthKey,
+  getBirthdays,
+saveBirthdays
+
 };
