@@ -65,11 +65,24 @@ client.once('ready', async () => {
   }
 
   // Register slash commands
-  const commands = [
-    { name: 'checkin', description: 'Điểm danh hàng ngày để theo dõi sự tham gia' },
-    { name: 'status', description: 'Hiển thị trạng thái bot và thống kê' },
-    { name: 'reset-checkin', description: 'Đặt lại dữ liệu điểm danh (Chỉ Admin)' }
-  ];
+const commands = [
+  { name: 'checkin', description: 'Điểm danh hàng ngày để theo dõi sự tham gia' },
+  { name: 'status', description: 'Hiển thị trạng thái bot và thống kê' },
+  { name: 'reset-checkin', description: 'Đặt lại dữ liệu điểm danh (Chỉ Admin)' },
+  { 
+    name: 'birthday', 
+    description: 'Đăng ký ngày sinh của bạn',
+    options: [
+      {
+        name: 'date',
+        description: 'Nhập ngày sinh của bạn (định dạng DD-MM)',
+        type: 3,
+        required: true
+      }
+    ]
+  }
+];
+
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
   try {
@@ -441,7 +454,20 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.reply({ content: '❌ Đã có lỗi xảy ra', ephemeral: true });
     }
   }
-});
+}else if (commandName === 'birthday') {
+  const date = interaction.options.getString('date');
+  const regex = /^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])$/;
+  if (!regex.test(date)) {
+    return interaction.reply({ content: '❌ Định dạng sai! Dùng DD-MM (ví dụ: 14-02)', ephemeral: true });
+  }
+
+  const birthdays = await getBirthdays();
+  birthdays[interaction.user.id] = date;
+  await saveBirthdays(birthdays);
+
+  await interaction.reply({ content: `✅ Đã lưu ngày sinh của bạn là **${date}** 🎂`, ephemeral: true });
+}
+
 // -------------------- Push checkin.json lên GitHub --------------------
 const { exec } = require('child_process');
 const util = require('util');
@@ -549,6 +575,48 @@ async function handleStatus(interaction) {
 
   await interaction.reply({ embeds: [embed] });
 }
+// 🎂 Gửi lời chúc sinh nhật và ngày đặc biệt
+cron.schedule('0 8 * * *', async () => { // chạy lúc 8h sáng mỗi ngày
+  const channel = client.channels.cache.get("866686468437049398");
+  if (!channel) return;
+
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const todayKey = `${dd}-${mm}`;
+
+  const birthdays = await getBirthdays();
+  const usersToday = Object.entries(birthdays)
+    .filter(([_, date]) => date === todayKey)
+    .map(([userId]) => userId);
+
+  if (usersToday.length > 0) {
+    for (const userId of usersToday) {
+      await channel.send(`🎉 Sinh nhật vui vẻ nha <@${userId}> 🥳 Chúc mày thêm tuổi mới bớt ngu hơn 😆`);
+    }
+  }
+
+  // 🎊 Các ngày lễ đặc biệt
+  const events = {
+    "25-12": "🎄 Noel vui vẻ nha mấy con heo 🎅",
+    "01-01": "🎆 Năm mới vui vẻ!!! Cầu cho năm nay ít lỗi hơn năm ngoái 😂",
+    "14-02": "💘 Valentine hả? Lại cô đơn hả con 🤣",
+    "08-03": "🌸 Chúc các bà các mẹ các chị 8/3 vui vẻ 😍",
+    "20-10": "💐 Chúc mừng 20/10 nè mấy má!",
+  };
+
+  // 👇 Tính ngày mùng 3 Tết âm lịch (sơ bộ — bạn có thể cập nhật logic chuẩn nếu muốn)
+  const lunarTet = ["29-01", "30-01", "31-01", "01-02", "02-02", "03-02"]; // ví dụ 2025 âm
+  if (lunarTet.includes(todayKey)) {
+    if (todayKey === "03-02") {
+      await channel.send("😩 Hết Tết rồi... đi làm lại thôi, thằng chủ bốc lột quá 😭");
+    }
+  }
+
+  if (events[todayKey]) {
+    await channel.send(events[todayKey]);
+  }
+});
 
 // -------------------- Handle Reset Checkin --------------------
 async function handleResetCheckin(interaction, member) {
