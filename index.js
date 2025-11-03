@@ -486,7 +486,6 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 // -------------------- Push checkin.json lên GitHub --------------------
-const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 
