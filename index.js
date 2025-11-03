@@ -114,24 +114,38 @@ async function pushToGitHub() {
     console.log("📤 Đang đẩy dữ liệu lên GitHub...");
     await execPromise(`git config user.email "bot@render.com"`);
     await execPromise(`git config user.name "Render Bot"`);
-    await execPromise(`git add data/checkins.json`);
-    await execPromise(`git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"`);
+
+    // ✅ Thêm tất cả file data vào commit
+    await execPromise(`
+      git add data/checkins.json data/birthdays.json data/spam.json data/roles.json
+    `);
+
+    await execPromise(`
+      git commit -m "Auto backup data [${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}] [skip ci]" || echo "Không có thay đổi nào"
+    `);
+
     const remote = `https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git`;
     await execPromise(`git push ${remote} HEAD:main`);
-    console.log("✅ Đã đẩy file lên GitHub!");
+
+    console.log("✅ Đã đẩy toàn bộ file data lên GitHub!");
   } catch (error) {
     console.error("❌ Lỗi khi push lên GitHub:", error?.message || error);
   }
 }
 
+
 // ========================= CRON TASKS =========================
 cron.schedule('0 3 * * *', async () => {
   const channel = client.channels.cache.get("866686468437049398");
   if (channel) await channel.send("😴 Bái bai bây t đi ngủ đây... mai gặp lại mấy khứa 😪");
+
+  // 🔥 Giờ nó sẽ push toàn bộ data: checkin, birthday, spam, roles
   await pushToGitHub();
+
   console.log("🕒 Đã push data, chuẩn bị restart bot...");
   setTimeout(() => process.exit(0), 5000);
 }, { timezone: "Asia/Ho_Chi_Minh" });
+
 
 cron.schedule('0 7 * * *', async () => {
   const channel = client.channels.cache.get("866686468437049398");
