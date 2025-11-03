@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, REST, Routes } = require('discord.js');
 const cron = require('node-cron');
 const http = require('http'); // Dummy server để Render free tier không báo lỗi port
-const config = require('./config.json');
+const config = require('./config.json'); 
 const {
   getCheckins,
   saveCheckins,
