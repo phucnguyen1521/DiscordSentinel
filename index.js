@@ -486,9 +486,6 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 // -------------------- Push checkin.json lên GitHub --------------------
-const util = require('util');
-const execPromise = util.promisify(exec);
-
 async function pushToGitHub() {
   try {
     console.log("📤 Đang đẩy dữ liệu lên GitHub...");
