@@ -349,6 +349,76 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
+// 🎊 Cron tự động chúc mừng sinh nhật & ngày lễ (cả âm lịch)
+const lunar = require('lunar-calendar');
+
+cron.schedule('0 8 * * *', async () => {
+  try {
+    const today = new Date();
+    const day = today.getDate().toString().padStart(2, '0');
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const todayStr = `${day}-${month}`;
+    const channel = client.channels.cache.get("866686468437049398"); // 🔄 Thay ID nếu cần
+    if (!channel) return;
+
+    // 🎂 Sinh nhật người dùng
+    const birthdays = await getBirthdays();
+    const usersWithBirthday = Object.entries(birthdays)
+      .filter(([_, date]) => date === todayStr)
+      .map(([id]) => id);
+
+    const birthdayMessages = [
+      "🎉 **Chúc mừng sinh nhật {user}!** Hôm nay là ngày đặc biệt của bạn, hãy tận hưởng trọn vẹn nhé 🎂💖",
+      "🎂 **Happy Birthday {user}!** Chúc bạn tuổi mới thật nhiều niềm vui, may mắn và bánh kem 🍰🥳",
+      "🎁 **{user} ơi sinh nhật vui vẻ nha!** Mong mọi điều tốt đẹp nhất sẽ đến với bạn 💫🎈",
+      "🥳 **Chúc mừng sinh nhật {user}!** Một năm mới tràn ngập năng lượng, cười thật tươi nhe 😆💐",
+      "💖 **{user} sinh nhật vui vẻ nhé!** Hôm nay bạn chính là main character đó 🌟🎉",
+      "🍰 **{user}, sinh nhật mà không có bánh là sai nha!** Chúc bạn một ngày thật ngọt ngào 😜",
+      "🎈 **Happy birthday {user}!** Cười thật nhiều, yêu thật lâu, và ngủ nướng thật sâu 😴🎂"
+    ];
+
+    for (const userId of usersWithBirthday) {
+      const member = await channel.guild.members.fetch(userId).catch(() => null);
+      if (member) {
+        const msg = birthdayMessages[Math.floor(Math.random() * birthdayMessages.length)]
+          .replace("{user}", `${member}`);
+        await channel.send(msg);
+      }
+    }
+
+    // 🗓️ Ngày lễ dương lịch cố định
+    const specialEvents = {
+      "01-01": "🎆 **Chúc mừng năm mới!** Năm nay nhất định sẽ là năm tuyệt vời của chúng ta 🥳✨",
+      "14-02": "💘 **Valentine’s Day!** Gửi thật nhiều yêu thương đến những trái tim đang rung động 💞",
+      "08-03": "🌸 **Ngày Quốc tế Phụ nữ!** Chúc những bông hoa xinh đẹp luôn rạng rỡ và hạnh phúc 💐",
+      "01-06": "🧸 **Ngày Quốc tế Thiếu nhi!** Chúc ai còn “bé trong tim” luôn vui tươi, hồn nhiên 😆🍭",
+      "20-10": "🌷 **Ngày Phụ nữ Việt Nam 20/10!** Chúc các chị em luôn xinh đẹp, tự tin và ngập tràn yêu thương 💝",
+      "24-12": "🎄 **Giáng sinh an lành!** Chúc bạn một mùa Noel ấm áp, tràn tiếng cười và quà đầy tay 🎁🎅"
+    };
+
+    if (specialEvents[todayStr]) {
+      await channel.send(specialEvents[todayStr]);
+    }
+
+    // 🧧 Kiểm tra âm lịch cho Tết & Trung Thu
+    const lunarToday = lunar.solarToLunar(today.getFullYear(), today.getMonth() + 1, today.getDate());
+    const { lunarDay, lunarMonth } = lunarToday;
+
+    if (lunarDay === 1 && lunarMonth === 1) {
+      await channel.send("🧧 **Chúc mừng Tết Nguyên Đán!** Cầu mong năm mới an khang, vạn sự như ý 🍊🐉");
+    } else if (lunarDay === 15 && lunarMonth === 8) {
+      await channel.send("🌕 **Trung Thu vui vẻ!** Chúc bạn đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵");
+    }
+
+    if (usersWithBirthday.length === 0 && !specialEvents[todayStr] && !(lunarDay === 1 && lunarMonth === 1) && !(lunarDay === 15 && lunarMonth === 8)) {
+      console.log("📅 Hôm nay không có sinh nhật hay lễ đặc biệt.");
+    }
+  } catch (err) {
+    console.error("❌ Lỗi khi chúc mừng ngày đặc biệt:", err);
+  }
+}, { timezone: "Asia/Ho_Chi_Minh" });
+
+
 // ========================= CHECKIN / STATUS / RESET =========================
 async function handleCheckin(interaction) {
   await interaction.deferReply({ ephemeral: true });
