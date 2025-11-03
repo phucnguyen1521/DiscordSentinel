@@ -1,7 +1,10 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, REST, Routes } = require('discord.js');
 const cron = require('node-cron');
-const http = require('http'); // Dummy server để Render free tier không báo lỗi port
-const config = require('./config.json'); 
+const http = require('http');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
+const config = require('./config.json');
 const {
   getCheckins,
   saveCheckins,
@@ -13,6 +16,7 @@ const {
   getMonthKey
 } = require('./utils');
 
+// ---------------------------------- CLIENT ----------------------------------
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -36,18 +40,26 @@ http.createServer((req, res) => {
 // -------------------- Khi bot ready --------------------
 client.once('ready', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
-  
-// 👋 Gửi lời chào khi bot on
-const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
-if (channel) {
-  const greetings = [
-    "😎 Alo alo, tao on lại rồi nè mấy khứa!",
-    "🧟‍♂️ Tao đã sống lại sau cái chết tạm thời 😭",
-    "🔥 Restart xong rồi, tiếp tục phá nào!",
-    "🫡 Vừa reboot xong, có ai nhớ t không?"
-  ];
-  channel.send(greetings[Math.floor(Math.random() * greetings.length)]);
-}
+
+  // 🕒 Lấy giờ VN
+  const now = new Date();
+  const hourVN = (now.getUTCHours() + 7) % 24;
+
+  // 💤 Nếu bot khởi động trong khoảng 3h–7h sáng → KHÔNG gửi lời chào
+  if (hourVN < 3 || hourVN >= 7) {
+    const channel = client.channels.cache.get("866686468437049398");
+    if (channel) {
+      const greetings = [
+        "😎 Alo alo, tao on lại rồi nè mấy khứa!",
+        "🧟‍♂️ Tao đã sống lại sau cái chết tạm thời 😭",
+        "🔥 Restart xong rồi, tiếp tục phá nào!",
+        "🫡 Vừa reboot xong, có ai nhớ t không?"
+      ];
+      channel.send(greetings[Math.floor(Math.random() * greetings.length)]);
+    }
+  } else {
+    console.log("🌙 Bot restart trong khung 3h–7h → không gửi lời chào.");
+  }
 
   // Register slash commands
   const commands = [
@@ -57,16 +69,11 @@ if (channel) {
   ];
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
-
   try {
-    console.log('🔄 Registering slash commands...');
     for (const guild of client.guilds.cache.values()) {
-      await rest.put(
-        Routes.applicationGuildCommands(client.user.id, guild.id),
-        { body: commands }
-      );
+      await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: commands });
     }
-    console.log('✅ Slash commands registered successfully!');
+    console.log('✅ Slash commands registered!');
   } catch (error) {
     console.error('❌ Error registering commands:', error);
   }
@@ -74,6 +81,43 @@ if (channel) {
   scheduleTasks();
 });
 
+// -------------------- Push data lên GitHub --------------------
+async function pushToGitHub() {
+  try {
+    console.log("📤 Đang đẩy dữ liệu lên GitHub...");
+    await execPromise(`git config user.email "bot@render.com"`);
+    await execPromise(`git config user.name "Render Bot"`);
+    await execPromise(`git add data/checkins.json`);
+    await execPromise(`git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"`);
+    await execPromise(`git push https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git HEAD:main`);
+    console.log("✅ Đã đẩy file lên GitHub!");
+  } catch (error) {
+    console.error("❌ Lỗi khi push lên GitHub:", error.message);
+  }
+}
+
+// -------------------- NHIỆM VỤ ĐẶC BIỆT 3H SÁNG --------------------
+cron.schedule('0 3 * * *', async () => {
+  const channel = client.channels.cache.get("866686468437049398");
+  if (channel) {
+    await channel.send("😴 Bái bai bây t đi ngủ đây... mai gặp lại mấy khứa 😪");
+  }
+
+  await pushToGitHub();
+
+  console.log("🕒 Đã push data, chuẩn bị restart bot...");
+  setTimeout(() => {
+    process.exit(0); // Render sẽ auto redeploy
+  }, 5000);
+});
+
+// -------------------- NHIỆM VỤ NHẮC 7H SÁNG --------------------
+cron.schedule('0 7 * * *', async () => {
+  const channel = client.channels.cache.get("866686468437049398");
+  if (channel) {
+    await channel.send("🌞 Dậy làm việc tiếp thôi nào mấy khứa ơi!!!");
+  }
+});
 
 // === Anti-dead server system ===
 const boredMessages = [
