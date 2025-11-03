@@ -445,28 +445,45 @@ client.on('interactionCreate', async (interaction) => {
   const { commandName, member } = interaction;
 
   try {
-    if (commandName === 'checkin') await handleCheckin(interaction);
-    else if (commandName === 'status') await handleStatus(interaction);
-    else if (commandName === 'reset-checkin') await handleResetCheckin(interaction, member);
+    if (commandName === 'checkin') {
+      await handleCheckin(interaction);
+    } 
+    else if (commandName === 'status') {
+      await handleStatus(interaction);
+    } 
+    else if (commandName === 'reset-checkin') {
+      await handleResetCheckin(interaction, member);
+    } 
+    else if (commandName === 'birthday') {
+      const date = interaction.options.getString('date');
+      const regex = /^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])$/;
+
+      if (!regex.test(date)) {
+        return interaction.reply({
+          content: '❌ Định dạng sai! Dùng **DD-MM** (ví dụ: 14-02)',
+          ephemeral: true,
+        });
+      }
+
+      const birthdays = await getBirthdays();
+      birthdays[interaction.user.id] = date;
+      await saveBirthdays(birthdays);
+
+      await interaction.reply({
+        content: `✅ Đã lưu ngày sinh của bạn là **${date}** 🎂`,
+        ephemeral: true,
+      });
+    }
   } catch (err) {
     console.error('❌ Interaction handler error:', err);
     if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Đã có lỗi xảy ra', ephemeral: true });
+      await interaction.reply({
+        content: '❌ Đã có lỗi xảy ra khi xử lý lệnh.',
+        ephemeral: true,
+      });
     }
   }
-}else if (commandName === 'birthday') {
-  const date = interaction.options.getString('date');
-  const regex = /^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])$/;
-  if (!regex.test(date)) {
-    return interaction.reply({ content: '❌ Định dạng sai! Dùng DD-MM (ví dụ: 14-02)', ephemeral: true });
-  }
-
-  const birthdays = await getBirthdays();
-  birthdays[interaction.user.id] = date;
-  await saveBirthdays(birthdays);
-
-  await interaction.reply({ content: `✅ Đã lưu ngày sinh của bạn là **${date}** 🎂`, ephemeral: true });
-}
+});
 
 // -------------------- Push checkin.json lên GitHub --------------------
 const { exec } = require('child_process');
