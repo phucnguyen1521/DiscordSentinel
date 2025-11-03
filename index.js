@@ -349,15 +349,14 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-// 🎊 Cron tự động chúc mừng sinh nhật & ngày lễ (cả âm lịch)
-const lunar = require('lunar-calendar');
-
+// 🎉 Cron chúc mừng sinh nhật và các ngày lễ
 cron.schedule('0 8 * * *', async () => {
   try {
     const today = new Date();
     const day = today.getDate().toString().padStart(2, '0');
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const todayStr = `${day}-${month}`;
+    const year = today.getFullYear().toString();
     const channel = client.channels.cache.get("866686468437049398"); // 🔄 Thay ID nếu cần
     if (!channel) return;
 
@@ -400,24 +399,24 @@ cron.schedule('0 8 * * *', async () => {
       await channel.send(specialEvents[todayStr]);
     }
 
-    // 🧧 Kiểm tra âm lịch cho Tết & Trung Thu
-    const lunarToday = lunar.solarToLunar(today.getFullYear(), today.getMonth() + 1, today.getDate());
-    const { lunarDay, lunarMonth } = lunarToday;
+    // 🧧 Tết Nguyên Đán & 🌕 Trung Thu 3 năm tiếp theo (dương lịch)
+    const lunarHolidays3Years = {
+      "2025": { "31-01": "🧧 **Tết Nguyên Đán 2025!** Chúc năm mới an khang, vạn sự như ý 🍊🐉",
+                "29-09": "🌕 **Trung Thu 2025!** Chúc đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵" },
+      "2026": { "15-02": "🧧 **Tết Nguyên Đán 2026!** Chúc năm mới hạnh phúc, may mắn 🌟",
+                "29-09": "🌕 **Trung Thu 2026!** Chúc đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵" },
+      "2027": { "06-02": "🧧 **Tết Nguyên Đán 2027!** Chúc năm mới an khang, vạn sự như ý 🍊🐉",
+                "18-09": "🌕 **Trung Thu 2027!** Chúc đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵" }
+    };
 
-    if (lunarDay === 1 && lunarMonth === 1) {
-      await channel.send("🧧 **Chúc mừng Tết Nguyên Đán!** Cầu mong năm mới an khang, vạn sự như ý 🍊🐉");
-    } else if (lunarDay === 15 && lunarMonth === 8) {
-      await channel.send("🌕 **Trung Thu vui vẻ!** Chúc bạn đêm rằm thật đẹp, có bánh nướng, có trà, có người thương 🌝🍵");
+    if (lunarHolidays3Years[year] && lunarHolidays3Years[year][todayStr]) {
+      await channel.send(lunarHolidays3Years[year][todayStr]);
     }
 
-    if (usersWithBirthday.length === 0 && !specialEvents[todayStr] && !(lunarDay === 1 && lunarMonth === 1) && !(lunarDay === 15 && lunarMonth === 8)) {
-      console.log("📅 Hôm nay không có sinh nhật hay lễ đặc biệt.");
-    }
   } catch (err) {
     console.error("❌ Lỗi khi chúc mừng ngày đặc biệt:", err);
   }
 }, { timezone: "Asia/Ho_Chi_Minh" });
-
 
 // ========================= CHECKIN / STATUS / RESET =========================
 async function handleCheckin(interaction) {
