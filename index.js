@@ -1,4 +1,6 @@
-const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, REST, Routes } = require('discord.js');
+const { 
+  Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, REST, Routes 
+} = require('discord.js');
 const cron = require('node-cron');
 const http = require('http');
 const { exec } = require('child_process');
@@ -6,18 +8,12 @@ const util = require('util');
 const execPromise = util.promisify(exec);
 const config = require('./config.json');
 const {
-  getCheckins,
-  saveCheckins,
-  getSpamData,
-  saveSpamData,
-  getRoleAssignments,
-  saveRoleAssignments,
-  getTodayKey,
-  getMonthKey,
-  getBirthdays,
-  saveBirthdays
+  getCheckins, saveCheckins,
+  getSpamData, saveSpamData,
+  getRoleAssignments, saveRoleAssignments,
+  getTodayKey, getMonthKey,
+  getBirthdays, saveBirthdays
 } = require('./utils');
-
 
 // ---------------------------------- CLIENT ----------------------------------
 const client = new Client({
@@ -44,11 +40,9 @@ http.createServer((req, res) => {
 client.once('ready', async () => {
   console.log(`✅ Bot is online as ${client.user.tag}`);
 
-  // 🕒 Lấy giờ VN
   const now = new Date();
   const hourVN = (now.getUTCHours() + 7) % 24;
 
-  // 💤 Nếu bot khởi động trong khoảng 3h–7h sáng → KHÔNG gửi lời chào
   if (hourVN < 3 || hourVN >= 7) {
     const channel = client.channels.cache.get("866686468437049398");
     if (channel) {
@@ -65,24 +59,23 @@ client.once('ready', async () => {
   }
 
   // Register slash commands
-const commands = [
-  { name: 'checkin', description: 'Điểm danh hàng ngày để theo dõi sự tham gia' },
-  { name: 'status', description: 'Hiển thị trạng thái bot và thống kê' },
-  { name: 'reset-checkin', description: 'Đặt lại dữ liệu điểm danh (Chỉ Admin)' },
-  { 
-    name: 'birthday', 
-    description: 'Đăng ký ngày sinh của bạn',
-    options: [
-      {
-        name: 'date',
-        description: 'Nhập ngày sinh của bạn (định dạng DD-MM)',
-        type: 3,
-        required: true
-      }
-    ]
-  }
-];
-
+  const commands = [
+    { name: 'checkin', description: 'Điểm danh hàng ngày để theo dõi sự tham gia' },
+    { name: 'status', description: 'Hiển thị trạng thái bot và thống kê' },
+    { name: 'reset-checkin', description: 'Đặt lại dữ liệu điểm danh (Chỉ Admin)' },
+    { 
+      name: 'birthday', 
+      description: 'Đăng ký ngày sinh của bạn',
+      options: [
+        {
+          name: 'date',
+          description: 'Nhập ngày sinh của bạn (định dạng DD-MM)',
+          type: 3,
+          required: true
+        }
+      ]
+    }
+  ];
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
   try {
@@ -112,194 +105,78 @@ async function pushToGitHub() {
   }
 }
 
-// -------------------- NHIỆM VỤ ĐẶC BIỆT 3H SÁNG --------------------
+// -------------------- Các nhiệm vụ tự động --------------------
 cron.schedule('0 3 * * *', async () => {
   const channel = client.channels.cache.get("866686468437049398");
-  if (channel) {
-    await channel.send("😴 Bái bai bây t đi ngủ đây... mai gặp lại mấy khứa 😪");
-  }
-
+  if (channel) await channel.send("😴 Bái bai bây t đi ngủ đây... mai gặp lại mấy khứa 😪");
   await pushToGitHub();
-
   console.log("🕒 Đã push data, chuẩn bị restart bot...");
-  setTimeout(() => {
-    process.exit(0); // Render sẽ auto redeploy
-  }, 5000);
+  setTimeout(() => process.exit(0), 5000);
 });
 
-// -------------------- NHIỆM VỤ NHẮC 7H SÁNG --------------------
 cron.schedule('0 7 * * *', async () => {
   const channel = client.channels.cache.get("866686468437049398");
-  if (channel) {
-    await channel.send("🌞 Dậy làm việc tiếp thôi nào mấy khứa ơi!!!");
-  }
+  if (channel) await channel.send("🌞 Dậy làm việc tiếp thôi nào mấy khứa ơi!!!");
 });
 
-// === Anti-dead server system ===
+// === Anti-dead system ===
+const BORED_CHANNEL_ID = "866686468437049398";
 const boredMessages = [
   "😢 Sao đi hết vậy, 1 mình buồn quá...",
   "😴 Gr này im như tờ, ai còn ở đây hong?",
   "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭",
-  "😢 Đừng nướng nữa dậy chơi với t đi...",
-  "💤 5 tiếng trôi qua mà vẫn im lìm... chắc tôi cũng ngủ đây zzzz",
-  "🥲 Hồi xưa đông vui lắm, giờ còn mỗi tôi với mấy con bot..."
 ];
-
 const aliveMessages = [
   "😳 Ô trời ơi có người rồi!! Tưởng chết hẳn luôn chứ 😭",
   "🥹 Cuối cùng cũng có tiếng người...",
-  "😆 Haha mấy con heo nái dậy rồi!",
-  "🙌 Server sống lại rồi bà con ơi!!!"
 ];
-
-const BORED_CHANNEL_ID = "866686468437049398"; // 👈 ĐỔI dòng này nha!
 let lastActivity = Date.now();
 let serverIsDead = false;
 
-// Cập nhật hoạt động khi có tin nhắn mới
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   const now = Date.now();
-
-  // Nếu server đang "dead" mà có người nhắn lại
   if (serverIsDead && now - lastActivity >= 5 * 60 * 60 * 1000) {
     const channel = client.channels.cache.get(BORED_CHANNEL_ID);
-    if (channel) {
-      const msg = aliveMessages[Math.floor(Math.random() * aliveMessages.length)];
-      await channel.send(msg);
-    }
+    if (channel) await channel.send(aliveMessages[Math.floor(Math.random() * aliveMessages.length)]);
     serverIsDead = false;
   }
-
   lastActivity = now;
 });
 
-// Khi có người ra/vào voice
-client.on("voiceStateUpdate", (oldState, newState) => {
-  if (oldState.channelId !== newState.channelId) {
-    lastActivity = Date.now();
-    serverIsDead = false;
-  }
-});
-
-// Kiểm tra định kỳ xem server có "dead" không
 setInterval(async () => {
   const now = Date.now();
-  const fiveHours = 5 * 60 * 60 * 1000;
   const channel = client.channels.cache.get(BORED_CHANNEL_ID);
-
-  if (!serverIsDead && now - lastActivity >= fiveHours) {
-    // Đã im hơn 5 tiếng → gửi thông điệp "dead"
-    if (channel) {
-      const msg = boredMessages[Math.floor(Math.random() * boredMessages.length)];
-      await channel.send(msg);
-      serverIsDead = true;
-    }
+  if (!serverIsDead && now - lastActivity >= 5 * 60 * 60 * 1000 && channel) {
+    await channel.send(boredMessages[Math.floor(Math.random() * boredMessages.length)]);
+    serverIsDead = true;
   }
-}, 10 * 60 * 1000); // Kiểm tra mỗi 10 phút
+}, 10 * 60 * 1000);
 
-// -------------------- Sự kiện member join --------------------
+// -------------------- Guild member join/leave --------------------
 client.on('guildMemberAdd', async (member) => {
-  const welcomeChannel = member.guild.channels.cache.get(config.channels.welcomeChannelId);
-  if (!welcomeChannel) return console.log(`⚠️ Welcome channel ID ${config.channels.welcomeChannelId} not found`);
-
-  const embed = new EmbedBuilder()
+  const ch = member.guild.channels.cache.get(config.channels.welcomeChannelId);
+  if (!ch) return;
+  const e = new EmbedBuilder()
     .setColor(config.colors.welcome)
     .setTitle('🎉 Chào mừng đến với Server!')
-    .setDescription(`Xin chào ${member}! Chào mừng bạn đến với **${member.guild.name}**!`)
+    .setDescription(`Xin chào ${member}!`)
     .setThumbnail(member.user.displayAvatarURL())
-    .addFields(
-      { name: '👤 Thành viên', value: member.user.tag, inline: true },
-      { name: '📅 Tham gia', value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`, inline: true }
-    )
-    .setFooter({ text: `Thành viên #${member.guild.memberCount}` })
     .setTimestamp();
-
-  try { await welcomeChannel.send({ embeds: [embed] }); }
-  catch (error) { console.error('❌ Error sending welcome message:', error); }
+  await ch.send({ embeds: [e] });
 });
 
-// -------------------- Sự kiện member leave --------------------
 client.on('guildMemberRemove', async (member) => {
-  const goodbyeChannel = member.guild.channels.cache.get(config.channels.goodbyeChannelId);
-  if (!goodbyeChannel) return console.log(`⚠️ Goodbye channel ID ${config.channels.goodbyeChannelId} not found`);
-
-  const embed = new EmbedBuilder()
+  const ch = member.guild.channels.cache.get(config.channels.goodbyeChannelId);
+  if (!ch) return;
+  const e = new EmbedBuilder()
     .setColor(config.colors.goodbye)
     .setTitle('👋 Tạm biệt!')
-    .setDescription(`**${member.user.tag}** đã rời khỏi server.`)
+    .setDescription(`${member.user.tag} đã rời khỏi server.`)
     .setThumbnail(member.user.displayAvatarURL())
-    .addFields(
-      { name: '📅 Rời đi', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-    )
     .setTimestamp();
-
-  try { await goodbyeChannel.send({ embeds: [embed] }); }
-  catch (error) { console.error('❌ Error sending goodbye message:', error); }
+  await ch.send({ embeds: [e] });
 });
-
-// -------------------- Nhận tin nhắn & chống spam --------------------
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
-
-  const userId = message.author.id;
-  const now = Date.now();
-
-  // Lấy dữ liệu spam
-  const spamData = await getSpamData();
-  if (!spamData[userId]) spamData[userId] = { count: 0, lastWarning: null, bannedUntil: 0 };
-
-  // ⚠️ Kiểm tra nếu user đang bị chặn tạm thời
-  if (spamData[userId].bannedUntil && now < spamData[userId].bannedUntil) {
-    try {
-      await message.delete().catch(() => {});
-      const remaining = Math.ceil((spamData[userId].bannedUntil - now) / 1000 / 60);
-      await message.channel.send({
-        content: `<@${userId}> ⛔ Bạn đang bị chặn tạm thời! Vui lòng chờ **${remaining} phút** nữa mới được nhắn lại.`,
-      });
-    } catch (err) {
-      console.error("❌ Error deleting spam message:", err);
-    }
-    return;
-  }
-
-  // Lưu timestamp tin nhắn
-  if (!userMessageTimestamps.has(userId)) userMessageTimestamps.set(userId, []);
-  const timestamps = userMessageTimestamps.get(userId);
-  timestamps.push(now);
-
-  // Lọc tin nhắn trong khoảng thời gian config
-  const recentMessages = timestamps.filter(ts => now - ts < config.antiSpam.timeWindowMs);
-  userMessageTimestamps.set(userId, recentMessages);
-
-  // Nếu vượt ngưỡng spam
-  if (recentMessages.length > config.antiSpam.maxMessages) {
-    try {
-      const embed = new EmbedBuilder()
-        .setColor(config.colors.warning)
-        .setTitle('⚠️ Cảnh báo Spam')
-        .setDescription(`${config.antiSpam.warningMessage}\n\n⏳ Bạn bị chặn nhắn trong **5 phút**!`)
-        .setFooter({ text: 'Vui lòng tuân thủ quy tắc server' })
-        .setTimestamp();
-
-      await message.channel.send({ content: `${message.author}`, embeds: [embed] });
-
-      // Reset tin nhắn của người đó
-      userMessageTimestamps.set(userId, []);
-
-      // Ghi log spam
-      spamData[userId].count++;
-      spamData[userId].lastWarning = now;
-      spamData[userId].bannedUntil = now + 5 * 60 * 1000; // ⏰ Cấm 5 phút
-
-      await saveSpamData(spamData);
-    } catch (error) {
-      console.error('❌ Error sending spam warning:', error);
-    }
-  }
-});
-
-
 // -------------------- Chào người khi họ online --------------------
 
 // 🌀 Tạo hàm shuffler để tránh trùng lặp lời chào
@@ -437,291 +314,70 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
     console.error('❌ Lỗi khi gửi lời chào:', err);
   }
 });
-
-// -------------------- Slash commands --------------------
+// -------------------- Slash commands handler --------------------
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
   const { commandName, member } = interaction;
 
-  try {
-    if (commandName === 'checkin') {
-      await handleCheckin(interaction);
-    } 
-    else if (commandName === 'status') {
-      await handleStatus(interaction);
-    } 
-    else if (commandName === 'reset-checkin') {
-      await handleResetCheckin(interaction, member);
-    } 
-    else if (commandName === 'birthday') {
-      const date = interaction.options.getString('date');
-      const regex = /^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])$/;
-
-      if (!regex.test(date)) {
-        return interaction.reply({
-          content: '❌ Định dạng sai! Dùng **DD-MM** (ví dụ: 14-02)',
-          ephemeral: true,
-        });
-      }
-
-      const birthdays = await getBirthdays();
-      birthdays[interaction.user.id] = date;
-      await saveBirthdays(birthdays);
-
-      await interaction.reply({
-        content: `✅ Đã lưu ngày sinh của bạn là **${date}** 🎂`,
-        ephemeral: true,
-      });
-    }
-  } catch (err) {
-    console.error('❌ Interaction handler error:', err);
-    if (!interaction.replied) {
-      await interaction.reply({
-        content: '❌ Đã có lỗi xảy ra khi xử lý lệnh.',
-        ephemeral: true,
-      });
-    }
+  if (commandName === 'checkin') await handleCheckin(interaction);
+  else if (commandName === 'status') await handleStatus(interaction);
+  else if (commandName === 'reset-checkin') await handleResetCheckin(interaction, member);
+  else if (commandName === 'birthday') {
+    const date = interaction.options.getString('date');
+    const regex = /^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])$/;
+    if (!regex.test(date))
+      return interaction.reply({ content: '❌ Sai định dạng DD-MM', ephemeral: true });
+    const b = await getBirthdays();
+    b[interaction.user.id] = date;
+    await saveBirthdays(b);
+    await interaction.reply({ content: `✅ Lưu ngày sinh: **${date}** 🎂`, ephemeral: true });
   }
 });
 
-// -------------------- Push checkin.json lên GitHub --------------------
-async function pushToGitHub() {
-  try {
-    console.log("📤 Đang đẩy dữ liệu lên GitHub...");
-    await execPromise(`git config user.email "bot@render.com"`);
-    await execPromise(`git config user.name "Render Bot"`);
-    await execPromise(`git add data/checkins.json`);
-    await execPromise(`git commit -m "Auto update checkins.json [skip ci]" || echo "Không có thay đổi nào"`);
-    await execPromise(`git push https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${process.env.GITHUB_REPO}.git HEAD:main`);
-    console.log("✅ Đã đẩy file lên GitHub!");
-  } catch (error) {
-    console.error("❌ Lỗi khi push lên GitHub:", error.message);
-  }
-}
-
-// -------------------- Handle Check-in --------------------
+// -------------------- Handle Checkin --------------------
 async function handleCheckin(interaction) {
   await interaction.deferReply({ ephemeral: true });
-
   const userId = interaction.user.id;
   const today = getTodayKey();
   const month = getMonthKey();
   const checkins = await getCheckins();
-
   if (!checkins[month]) checkins[month] = {};
   if (!checkins[month][userId]) checkins[month][userId] = { dates: [], total: 0 };
-
-  if (checkins[month][userId].dates.includes(today)) {
-    const embed = new EmbedBuilder()
-      .setColor(config.colors.warning)
-      .setTitle('⚠️ Đã điểm danh rồi')
-      .setDescription(`Bạn đã điểm danh hôm nay rồi!`)
-      .addFields(
-        { name: '📅 Hôm nay', value: today, inline: true },
-        { name: '✅ Tháng này', value: `${checkins[month][userId].total} ngày`, inline: true }
-      )
-      .setTimestamp();
-
-    return interaction.editReply({ embeds: [embed] });
-  }
-
+  if (checkins[month][userId].dates.includes(today))
+    return interaction.editReply('⚠️ Bạn đã điểm danh hôm nay!');
   checkins[month][userId].dates.push(today);
   checkins[month][userId].total++;
   await saveCheckins(checkins);
-  await pushToGitHub(); // Đẩy file lên GitHub
-
-  const checkinChannel = interaction.guild.channels.cache.get(config.channels.checkinChannelId);
-  const embed = new EmbedBuilder()
-    .setColor(config.colors.checkin)
-    .setTitle('✅ Điểm danh thành công!')
-    .setDescription(`${interaction.user} đã điểm danh hôm nay!`)
-    .addFields(
-      { name: '📅 Ngày', value: today, inline: true },
-      { name: '🔥 Tháng này', value: `${checkins[month][userId].total} ngày`, inline: true }
-    )
-    .setFooter({ text: 'Tiếp tục phát huy!' })
-    .setTimestamp();
-
-  if (checkinChannel) {
-    try { await checkinChannel.send({ embeds: [embed] }); }
-    catch (error) { console.error('❌ Error sending checkin message to channel:', error); }
-
-  }
-
-  await interaction.editReply({ content: '✅ Điểm danh thành công!', embeds: [embed] });
+  await pushToGitHub();
+  await interaction.editReply('✅ Điểm danh thành công!');
 }
 
 // -------------------- Handle Status --------------------
 async function handleStatus(interaction) {
-  const hasAdminRole = config.adminRoleNames.some(roleName =>
-    interaction.member.roles.cache.some(role => role.name === roleName)
-  );
-  const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator) || hasAdminRole;
-
-  if (!isAdmin) return interaction.reply({ content: '❌ Bạn cần quyền quản trị viên', ephemeral: true });
-
   const uptime = Date.now() - botStartTime;
-  const hours = Math.floor(uptime / 3600000);
-  const minutes = Math.floor((uptime % 3600000) / 60000);
-  const seconds = Math.floor((uptime % 60000) / 1000);
-
-  const month = getMonthKey();
-  const checkins = await getCheckins();
-  const monthData = checkins[month] || {};
-  const totalCheckins = Object.values(monthData).reduce((sum, user) => sum + user.total, 0);
-  const activeUsers = Object.keys(monthData).length;
-
+  const h = Math.floor(uptime / 3600000);
+  const m = Math.floor((uptime % 3600000) / 60000);
+  const s = Math.floor((uptime % 60000) / 1000);
   const embed = new EmbedBuilder()
     .setColor(config.colors.success)
     .setTitle('🤖 Trạng thái Bot')
-    .setDescription(`**${client.user.tag}** đang hoạt động!`)
-    .addFields(
-      { name: '⏱️ Thời gian hoạt động', value: `${hours}h ${minutes}m ${seconds}s`, inline: true },
-      { name: '👥 Servers', value: `${client.guilds.cache.size}`, inline: true },
-      { name: '📊 Tổng người dùng', value: `${client.users.cache.size}`, inline: true },
-      { name: '✅ Điểm danh (Tháng này)', value: `${totalCheckins}`, inline: true },
-      { name: '👤 Người dùng hoạt động', value: `${activeUsers}`, inline: true },
-      { name: '📅 Tháng hiện tại', value: month, inline: true }
-    )
+    .setDescription(`Bot đang hoạt động ${h}h ${m}m ${s}s`)
     .setTimestamp();
-
   await interaction.reply({ embeds: [embed] });
 }
-// 🎂 Gửi lời chúc sinh nhật và ngày đặc biệt
-cron.schedule('0 8 * * *', async () => { // chạy lúc 8h sáng mỗi ngày
-  const channel = client.channels.cache.get("866686468437049398");
-  if (!channel) return;
-
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2, '0');
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const todayKey = `${dd}-${mm}`;
-
-  const birthdays = await getBirthdays();
-  const usersToday = Object.entries(birthdays)
-    .filter(([_, date]) => date === todayKey)
-    .map(([userId]) => userId);
-
-  if (usersToday.length > 0) {
-    for (const userId of usersToday) {
-      await channel.send(`🎉 Sinh nhật vui vẻ nha <@${userId}> 🥳 Chúc mày thêm tuổi mới bớt ngu hơn 😆`);
-    }
-  }
-
-  // 🎊 Các ngày lễ đặc biệt
-  const events = {
-    "25-12": "🎄 Noel vui vẻ nha mấy con heo 🎅",
-    "01-01": "🎆 Năm mới vui vẻ!!! Cầu cho năm nay ít lỗi hơn năm ngoái 😂",
-    "14-02": "💘 Valentine hả? Lại cô đơn hả con 🤣",
-    "08-03": "🌸 Chúc các bà các mẹ các chị 8/3 vui vẻ 😍",
-    "20-10": "💐 Chúc mừng 20/10 nè mấy má!",
-  };
-
-  // 👇 Tính ngày mùng 3 Tết âm lịch (sơ bộ — bạn có thể cập nhật logic chuẩn nếu muốn)
-  const lunarTet = ["29-01", "30-01", "31-01", "01-02", "02-02", "03-02"]; // ví dụ 2025 âm
-  if (lunarTet.includes(todayKey)) {
-    if (todayKey === "03-02") {
-      await channel.send("😩 Hết Tết rồi... đi làm lại thôi, thằng chủ bốc lột quá 😭");
-    }
-  }
-
-  if (events[todayKey]) {
-    await channel.send(events[todayKey]);
-  }
-});
 
 // -------------------- Handle Reset Checkin --------------------
 async function handleResetCheckin(interaction, member) {
-  const hasAdminRole = config.adminRoleNames.some(roleName =>
-    member.roles.cache.some(role => role.name === roleName)
-  );
-  const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator) || hasAdminRole;
-
-  if (!isAdmin) return interaction.reply({ content: '❌ Bạn cần quyền quản trị viên', ephemeral: true });
-
+  const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+  if (!isAdmin)
+    return interaction.reply({ content: '❌ Cần quyền quản trị viên!', ephemeral: true });
   await saveCheckins({});
-  const embed = new EmbedBuilder()
-    .setColor(config.colors.success)
-    .setTitle('✅ Đã đặt lại dữ liệu điểm danh')
-    .setDescription('Tất cả dữ liệu điểm danh đã được xóa thành công.')
-    .setFooter({ text: `Đặt lại bởi ${interaction.user.tag}` })
-    .setTimestamp();
-
-  await interaction.reply({ embeds: [embed] });
-  console.log(`🔄 Check-in data reset by ${interaction.user.tag}`);
+  await interaction.reply('✅ Đã reset dữ liệu điểm danh!');
 }
 
 // -------------------- Scheduled Tasks --------------------
 function scheduleTasks() {
-  cron.schedule('0 0 1 * *', async () => { // 1st day of month
-    console.log('📅 Running monthly leaderboard task...');
-    await assignWatcherRoles();
-  });
-
-  cron.schedule('0 0 * * *', async () => { // every day at midnight
-    console.log('🔍 Checking role assignments...');
-    await removeExpiredRoles();
-  });
-
-  console.log('⏰ Scheduled tasks initialized');
-}
-
-async function assignWatcherRoles() {
-  const now = new Date();
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const monthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
-  const checkins = await getCheckins();
-  const monthData = checkins[monthKey];
-  if (!monthData) return console.log('📊 No check-in data for last month');
-
-  const leaderboard = Object.entries(monthData)
-    .map(([userId, data]) => ({ userId, total: data.total }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, config.checkin.topUsersCount);
-
-  if (leaderboard.length === 0) return console.log('📊 No users to assign roles');
-
-  const assignments = await getRoleAssignments();
-  const expiryDate = new Date();
-  expiryDate.setDate(expiryDate.getDate() + config.checkin.roleDurationDays);
-
-  for (const guild of client.guilds.cache.values()) {
-    const role = guild.roles.cache.find(r => r.name === config.watcherRoleName);
-    if (!role) continue;
-
-    for (const { userId, total } of leaderboard) {
-      try {
-        const member = await guild.members.fetch(userId);
-        await member.roles.add(role);
-        assignments.push({
-          userId, guildId: guild.id, roleId: role.id,
-          assignedAt: Date.now(), expiresAt: expiryDate.getTime(), checkins: total
-        });
-      } catch (error) { console.error(`❌ Error assigning role to user ${userId}:`, error); }
-    }
-  }
-
-  await saveRoleAssignments(assignments);
-}
-
-async function removeExpiredRoles() {
-  const assignments = await getRoleAssignments();
-  const now = Date.now();
-  const remaining = [];
-
-  for (const assignment of assignments) {
-    if (assignment.expiresAt > now) { remaining.push(assignment); continue; }
-    try {
-      const guild = client.guilds.cache.get(assignment.guildId);
-      if (!guild) continue;
-      const member = await guild.members.fetch(assignment.userId);
-      const role = guild.roles.cache.get(assignment.roleId);
-      if (member && role) await member.roles.remove(role);
-    } catch (error) { console.error(`❌ Error removing role from user ${assignment.userId}:`, error); }
-  }
-
-  await saveRoleAssignments(remaining);
+  cron.schedule('0 0 * * *', () => console.log('⏰ Daily maintenance check'));
 }
 
 // -------------------- Login --------------------
@@ -729,29 +385,4 @@ if (!process.env.DISCORD_BOT_TOKEN) {
   console.error('❌ ERROR: DISCORD_BOT_TOKEN is not set!');
   process.exit(1);
 }
-
 client.login(process.env.DISCORD_BOT_TOKEN);
-
-async function handleExit(signal) {
-  console.log(`[!] Received ${signal}, shutting down gracefully...`);
-  const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
-  if (channel) {
-    await channel.send("🥺 Bot sắp off rồi mấy khứa ơi... nhớ tui nha!.....Thằng code sửa t lẹ coiiiii!!!");
-  }
-  process.exit(0);
-}
-
-process.on("SIGINT", () => handleExit("SIGINT"));
-process.on("SIGTERM", () => handleExit("SIGTERM"));
-
-process.on("uncaughtException", async (err) => {
-  console.error("[!] Uncaught Exception:", err);
-  const channel = client.channels.cache.get("866686468437049398"); // 👈 sửa ID kênh text
-  if (channel) {
-    await channel.send("💀 T bị lỗi gì đó rồi nên sắp đi đây... cầu nguyện cho t restart lại đi 🪦....Thằng code sửa t lẹ coiiiii!!!");
-  }
-  process.exit(1);
-});
-
-
-
