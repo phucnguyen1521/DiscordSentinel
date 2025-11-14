@@ -220,7 +220,6 @@ client.on('guildMemberAdd', async (member) => {
       `📅 **Tạo tài khoản:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n\n` +
       `✨ Chúc bạn có trải nghiệm tuyệt nhất tại server!`
     )
-    .setImage("https://i.imgur.com/V4RclNB.gif") // Banner Welcome
     .setFooter({ text: `Server: ${guild.name}` })
     .setTimestamp();
 
@@ -257,7 +256,6 @@ client.on('guildMemberRemove', async (member) => {
       `#️⃣ **Thành viên còn lại:** ${memberCount}\n\n` +
       `Chúc bạn mọi điều tốt đẹp!`
     )
-    .setImage("https://i.imgur.com/b0tVUXP.gif") // Banner Goodbye (có thể đổi)
     .setTimestamp();
 
   await ch.send({ embeds: [embed] });
@@ -281,7 +279,7 @@ const greetings = {
     "Ê con ngu kia, on sớm zậy định phá server hả 😤",
     "Một vị cao nhân từng nói: dậy xớm có làm thì mới có ăn không làm mà đòi có ăn thì ăn đầu BUỒI ăn CỨT thế cho nó dễ 😤",
     "Ủa, onl sớm dữ, tính đi làm người giàu hả nhưng mà mày vẫn nghèo 😏",
-    "Em bước ra ngoài, kết bạn đi, làm điều gì đó có ý nghĩa... 😩",
+    "Em dành thời gian cho em đi. Em đi ra ngoài đường, kết bạn đi em. Làm một điều gì đó có ý nghĩa, đi kiếm tiền hay giao tiếp với bố mẹ đi. 😩",
     "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂"
   ],
   trưa: [
@@ -294,18 +292,21 @@ const greetings = {
     "Chiều on chi nữa, nghỉ xíu đi 😒",
     "Ủa, chiều rồi mà vẫn chưa biến hả, bám server dữ 👀",
     "On chiều mà làm như bận lắm vậy 😏",
+    "Em dành thời gian cho em đi. Em đi ra ngoài đường, kết bạn đi em. Làm một điều gì đó có ý nghĩa, đi kiếm tiền hay giao tiếp với bố mẹ đi. 😩",
     "Chiều rồi mà vẫn ngồi đây, chắc không có bạn ngoài đời 😆"
   ],
   tối: [
     "Ê con khùng, tối rồi on chi nữa 😴",
     "Tối rồi mà còn ngồi on, mai khỏi dậy nha 😏",
     "Ủa, tối rồi mà vẫn chưa biến hả, bám dai dữ 👀",
+    "Em dành thời gian cho em đi. Em đi ra ngoài đường, kết bạn đi em. Làm một điều gì đó có ý nghĩa, đi kiếm tiền hay giao tiếp với bố mẹ đi. 😩",
     "On tối chi, không ra ngoài kiếm bồ đi 😎"
   ],
   khuya: [
     "Khuya rồi đồ ngu, ngủ đi chứ on chi 😪",
     "Ủa, khuya rồi mà vẫn chưa biến hả, bám dai dữ 👀",
     "Mất ngủ hả con? Khuya zầy còn on 😵",
+    "Em dành thời gian cho em đi. Em đi ra ngoài đường, kết bạn đi em. Làm một điều gì đó có ý nghĩa, đi kiếm tiền hay giao tiếp với bố mẹ đi. 😩",
     "Khuya rồi mà on, chắc đang rình drama 🤨"
   ]
 };
