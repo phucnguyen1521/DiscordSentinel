@@ -187,28 +187,80 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 // ========================= GUILD JOIN/LEAVE =========================
+
+// ====== MEMBER JOIN ======
 client.on('guildMemberAdd', async (member) => {
   const ch = member.guild.channels.cache.get(config.channels.welcomeChannelId);
   if (!ch) return;
-  const e = new EmbedBuilder()
-    .setColor(config.colors.welcome)
-    .setTitle('🎉 Chào mừng đến với Server!')
-    .setDescription(`Xin chào ${member}!`)
-    .setThumbnail(member.user.displayAvatarURL())
+
+  const guild = member.guild;
+
+  // Đếm thành viên không tính bot
+  const memberCount = guild.members.cache.filter(m => !m.user.bot).size;
+
+  // Random message cho vui
+  const welcomeMessages = [
+    `Xin chào <@${member.user.id}>! Chào mừng bạn đến với **${guild.name}** 😎`,
+    `🎉 Hoan nghênh <@${member.user.id}>! Server lại đông thêm một người!`,
+    `🔥 <@${member.user.id}> vừa đáp xuống server!`,
+    `🚀 Boom! <@${member.user.id}> đã xuất hiện!`,
+    `✨ Một thành viên mới đã đến — xin chào <@${member.user.id}>!`
+  ];
+
+  const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+
+  const embed = new EmbedBuilder()
+    .setColor(config.colors.welcome || "#00FFB3")
+    .setTitle('🎉 Chào mừng thành viên mới!')
+    .setThumbnail(member.user.displayAvatarURL({ size: 1024 }))
+    .setDescription(
+      `${randomWelcome}\n\n` +
+      `👤 **Tên:** ${member.user.username}\n` +
+      `#️⃣ **Bạn là thành viên thứ:** ${memberCount}\n` +
+      `📅 **Tạo tài khoản:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n\n` +
+      `✨ Chúc bạn có trải nghiệm tuyệt nhất tại server!`
+    )
+    .setImage("https://i.imgur.com/V4RclNB.gif") // Banner Welcome
+    .setFooter({ text: `Server: ${guild.name}` })
     .setTimestamp();
-  await ch.send({ embeds: [e] });
+
+  await ch.send({ embeds: [embed] });
 });
 
+
+// ====== MEMBER LEAVE ======
 client.on('guildMemberRemove', async (member) => {
   const ch = member.guild.channels.cache.get(config.channels.goodbyeChannelId);
   if (!ch) return;
-  const e = new EmbedBuilder()
-    .setColor(config.colors.goodbye)
-    .setTitle('👋 Tạm biệt!')
-    .setDescription(`${member.user.tag} đã rời khỏi server.`)
-    .setThumbnail(member.user.displayAvatarURL())
+
+  // Random message chia tay
+  const leaveMessages = [
+    `${member.user.username} đã rời server… 😢`,
+    `👋 Tạm biệt ${member.user.username}! Mong bạn sẽ quay lại.`,
+    `🚪 *Cửa đóng cái “cộc”* — ${member.user.username} rời đi rồi.`,
+    `😭 Buồn ghê… ${member.user.username} vừa out.`,
+    `💨 Và thế là ${member.user.username} đã biến mất khỏi server.`
+  ];
+
+  const randomLeave = leaveMessages[Math.floor(Math.random() * leaveMessages.length)];
+
+  // Đếm thành viên còn lại
+  const memberCount = member.guild.members.cache.filter(m => !m.user.bot).size;
+
+  const embed = new EmbedBuilder()
+    .setColor(config.colors.goodbye || "#FF6B6B")
+    .setTitle('👋 Một thành viên đã rời server')
+    .setThumbnail(member.user.displayAvatarURL({ size: 1024 }))
+    .setDescription(
+      `${randomLeave}\n\n` +
+      `👤 **Tên:** ${member.user.username}\n` +
+      `#️⃣ **Thành viên còn lại:** ${memberCount}\n\n` +
+      `Chúc bạn mọi điều tốt đẹp!`
+    )
+    .setImage("https://i.imgur.com/b0tVUXP.gif") // Banner Goodbye (có thể đổi)
     .setTimestamp();
-  await ch.send({ embeds: [e] });
+
+  await ch.send({ embeds: [embed] });
 });
 
 // ========================= GREETING SYSTEM =========================
@@ -330,7 +382,6 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 });
 
 // ========================= SLASH COMMAND HANDLER =========================
-// ========================= SLASH COMMAND HANDLER =========================
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const { commandName } = interaction;
@@ -422,20 +473,45 @@ cron.schedule('0 8 * * *', async () => {
 // ========================= CHECKIN / STATUS / RESET =========================
 async function handleCheckin(interaction) {
   await interaction.deferReply({ ephemeral: true });
+
   const userId = interaction.user.id;
-  const today = getTodayKey();
+  const today = getTodayKey(); // YYYY-MM-DD
   const month = getMonthKey();
   const checkins = await getCheckins();
+
   if (!checkins[month]) checkins[month] = {};
   if (!checkins[month][userId]) checkins[month][userId] = { dates: [], total: 0 };
+
   if (checkins[month][userId].dates.includes(today))
     return interaction.editReply('⚠️ Bạn đã điểm danh hôm nay!');
+
+  // Lưu dữ liệu check-in
   checkins[month][userId].dates.push(today);
   checkins[month][userId].total++;
   await saveCheckins(checkins);
   await pushToGitHub();
-  await interaction.editReply('✅ Điểm danh thành công!');
+
+  // Format ngày kiểu DD/MM/YYYY
+  const [y, m, d] = today.split("-");
+  const displayVNDate = `${d}/${m}/${y}`;
+
+  const embed = new EmbedBuilder()
+    .setColor('#00FFB3')
+    .setTitle('✅ Điểm danh thành công!')
+    .setDescription(
+      `**<@${userId}> đã điểm danh hôm nay!**\n\n` +
+      `📅 **Ngày:** ${displayVNDate}\n` +
+      `🔥 **Tháng này:** ${checkins[month][userId].total} ngày\n\n` +
+      `Tiếp tục phát huy!`
+    )
+    .setFooter({
+      text: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+    })
+    .setTimestamp();
+
+  await interaction.editReply({ embeds: [embed] });
 }
+
 
 async function handleStatus(interaction) {
   const uptime = Date.now() - botStartTime;
