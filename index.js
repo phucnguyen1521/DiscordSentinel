@@ -152,40 +152,6 @@ cron.schedule('0 7 * * *', async () => {
   if (channel) await channel.send("🌞 Dậy làm việc tiếp thôi nào mấy khứa ơi!!!");
 }, { timezone: "Asia/Ho_Chi_Minh" });
 
-// ========================= ANTI-DEAD SYSTEM =========================
-const BORED_CHANNEL_ID = "866686468437049398";
-const boredMessages = [
-  "😢 Sao đi hết vậy, 1 mình buồn quá...",
-  "😴 Gr này im như tờ, ai còn ở đây hong?",
-  "👀 Alo? Có ai không hay server này thành nghĩa địa rồi 😭"
-];
-const aliveMessages = [
-  "😳 Ô trời ơi có người rồi!! Tưởng chết hẳn luôn chứ 😭",
-  "🥹 Cuối cùng cũng có tiếng người..."
-];
-let lastActivity = Date.now();
-let serverIsDead = false;
-
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
-  const now = Date.now();
-  if (serverIsDead && now - lastActivity >= 5 * 60 * 60 * 1000) {
-    const channel = client.channels.cache.get(BORED_CHANNEL_ID);
-    if (channel) await channel.send(aliveMessages[Math.floor(Math.random() * aliveMessages.length)]);
-    serverIsDead = false;
-  }
-  lastActivity = now;
-});
-
-setInterval(async () => {
-  const now = Date.now();
-  const channel = client.channels.cache.get(BORED_CHANNEL_ID);
-  if (!serverIsDead && now - lastActivity >= 5 * 60 * 60 * 1000 && channel) {
-    await channel.send(boredMessages[Math.floor(Math.random() * boredMessages.length)]);
-    serverIsDead = true;
-  }
-}, 10 * 60 * 1000);
-
 // ========================= GUILD JOIN/LEAVE =========================
 
 // ====== MEMBER JOIN ======
@@ -282,12 +248,6 @@ const greetings = {
     "Em dành thời gian cho em đi. Em đi ra ngoài đường, kết bạn đi em. Làm một điều gì đó có ý nghĩa, đi kiếm tiền hay giao tiếp với bố mẹ đi. 😩",
     "Sáng sớm mà lò dò on, đúng là rảnh hết phần thiên hạ 😂"
   ],
-  trưa: [
-    "Chào buổi trưa nè 🌤️",
-    "Trưa on chi, không lo ăn lo ngủ, đúng đồ nghiện game 😤",
-    "Ủa, trưa mà on chi? Mày không có đời sống hả 😂",
-    "Trưa on là biết rảnh quá rồi đó nha 😎"
-  ],
   chiều: [
     "Chiều on chi nữa, nghỉ xíu đi 😒",
     "Ủa, chiều rồi mà vẫn chưa biến hả, bám server dữ 👀",
@@ -313,7 +273,6 @@ const greetings = {
 
 const shufflers = {
   sáng: createShuffler(greetings.sáng),
-  trưa: createShuffler(greetings.trưa),
   chiều: createShuffler(greetings.chiều),
   tối: createShuffler(greetings.tối),
   khuya: createShuffler(greetings.khuya)
@@ -325,9 +284,8 @@ let currentPeriod = null;
 function getPeriod() {
   const now = new Date();
   const hour = (now.getUTCHours() + 7) % 24;
-  if (hour >= 5 && hour < 11) return 'sáng';
-  if (hour >= 11 && hour < 13) return 'trưa';
-  if (hour >= 13 && hour < 18) return 'chiều';
+  if (hour >= 5 && hour < 12) return 'sáng';
+  if (hour >= 12 && hour < 18) return 'chiều';
   if (hour >= 18 && hour < 22) return 'tối';
   return 'khuya';
 }
