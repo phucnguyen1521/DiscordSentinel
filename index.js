@@ -136,22 +136,10 @@ async function pushToGitHub() {
 
 // ========================= CRON TASKS =========================
 cron.schedule('0 3 * * *', async () => {
-  const channel = client.channels.cache.get("866686468437049398");
-  if (channel) await channel.send("😴 Bái bai bây t đi ngủ đây... mai gặp lại mấy khứa 😪");
-
-  // 🔥 Giờ nó sẽ push toàn bộ data: checkin, birthday, spam, roles
   await pushToGitHub();
-
   console.log("🕒 Đã push data, chuẩn bị restart bot...");
   setTimeout(() => process.exit(0), 5000);
 }, { timezone: "Asia/Ho_Chi_Minh" });
-
-
-cron.schedule('0 7 * * *', async () => {
-  const channel = client.channels.cache.get("866686468437049398");
-  if (channel) await channel.send("🌞 Dậy làm việc tiếp thôi nào mấy khứa ơi!!!");
-}, { timezone: "Asia/Ho_Chi_Minh" });
-
 // ========================= GUILD JOIN/LEAVE =========================
 
 // ====== MEMBER JOIN ======
@@ -409,7 +397,9 @@ cron.schedule('0 8 * * *', async () => {
       "20-10": "🌷 **Ngày Phụ nữ Việt Nam 20/10!** Chúc các chị em luôn xinh đẹp, tự tin và ngập tràn yêu thương 💝",
       "24-12": "🎄 **Giáng sinh an lành!** Chúc bạn một mùa Noel ấm áp, tràn tiếng cười và quà đầy tay 🎁🎅"
     };
-    if (specialEvents[todayStr]) await channel.send(specialEvents[todayStr]);
+    if (specialEvents[todayStr]) {
+  await channel.send(`@everyone ${specialEvents[todayStr]}`);
+}
 
     // ===== Tết âm & Trung Thu (3 năm tới) =====
     // Cập nhật dễ dàng: chỉ thêm/xóa entry theo format "YYYY-MM-DD"
@@ -422,7 +412,9 @@ cron.schedule('0 8 * * *', async () => {
       "2028-10-06": "🌕 **Trung Thu 2028!** Chúc bạn đêm rằm thật đẹp, đầy bánh nướng, trà ngon và hạnh phúc 🌝🍵"
     };
     const todayISO = today.toISOString().slice(0, 10); // YYYY-MM-DD
-    if (lunarSpecialEvents[todayISO]) await channel.send(lunarSpecialEvents[todayISO]);
+    if (lunarSpecialEvents[todayISO]) {
+  await channel.send(`@everyone ${lunarSpecialEvents[todayISO]}`);
+}
 
   } catch (err) {
     console.error("❌ Lỗi khi chúc mừng ngày đặc biệt:", err);
