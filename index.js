@@ -54,10 +54,7 @@ client.once('clientReady', async () => {
     const channel = client.channels.cache.get("866686468437049398");
     if (channel) {
       const greetings = [
-        "😎 Alo alo, tao on lại rồi nè mấy khứa!",
-        "🧟‍♂️ Tao đã sống lại sau cái chết tạm thời 😭",
-        "🔥 Restart xong rồi, tiếp tục phá nào!",
-        "🫡 Vừa reboot xong, có ai nhớ t không?"
+        "😎 Alo alo, lâu không gặp!"
       ];
       channel.send(greetings[Math.floor(Math.random() * greetings.length)]);
     }
